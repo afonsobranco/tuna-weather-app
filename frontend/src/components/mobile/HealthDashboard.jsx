@@ -110,7 +110,7 @@ export default function HealthDashboard({ data, unit, tr }) {
             <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 28, fontWeight: 500, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
               {uv?.value ?? 0}
             </span>
-            <Tone tone={uv?.tone || 'green'}>{uv?.label || '—'}</Tone>
+            <Tone tone={uv?.tone || 'green'}>{tr.uvLabels?.[uv?.label] || uv?.label || '—'}</Tone>
           </div>
           <ProgressBar value={uv?.value ?? 0} max={11} color="#ffa850" />
         </Glass>
@@ -127,7 +127,7 @@ export default function HealthDashboard({ data, unit, tr }) {
             <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 28, fontWeight: 500, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
               {aqi?.value ?? 0}
             </span>
-            <Tone tone={aqi?.tone || 'green'}>{aqi?.label || '—'}</Tone>
+            <Tone tone={aqi?.tone || 'green'}>{tr.aqiLabels?.[aqi?.label] || aqi?.label || '—'}</Tone>
           </div>
           <ProgressBar value={aqi?.value ?? 0} max={200} color="#3ed28b" />
         </Glass>
@@ -140,7 +140,7 @@ export default function HealthDashboard({ data, unit, tr }) {
             {tr.wind}
           </div>
           <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 22, fontWeight: 500, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
-            {windSpeed} <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.55)' }}>km/h {data.windDir || ''}</span>
+            {windSpeed} <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.55)' }}>km/h {tr.windDirs?.[data.windDir] || data.windDir || ''}</span>
           </div>
         </Glass>
         <Glass style={{ flex: 1, padding: '12px 14px' }}>
@@ -208,12 +208,15 @@ export default function HealthDashboard({ data, unit, tr }) {
             <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>
               {tr.howWeCalculate}
             </div>
-            {[
-              { label: 'UV Index', weight: '25%', value: uvFactor, color: rcUv },
-              { label: 'Air Quality', weight: '40%', value: aqiFactor, color: rcAqi },
-              { label: 'Dewpoint / Humidity', weight: '20%', value: dewFactor, color: rcDew },
-              { label: 'Wind', weight: '15%', value: windFactor, color: rcWind },
-            ].map((f) => (
+            {(tr.healthFactors || ['UV Index', 'Air Quality', 'Dewpoint / Humidity', 'Wind']).map((label, i) => {
+              const factors = [
+                { weight: '25%', value: uvFactor,   color: rcUv   },
+                { weight: '40%', value: aqiFactor,  color: rcAqi  },
+                { weight: '20%', value: dewFactor,  color: rcDew  },
+                { weight: '15%', value: windFactor, color: rcWind },
+              ]
+              const f = { label, ...factors[i] }
+              return (
               <div key={f.label} style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
@@ -225,7 +228,8 @@ export default function HealthDashboard({ data, unit, tr }) {
                 </div>
                 <ProgressBar value={f.value} max={100} color={f.color} />
               </div>
-            ))}
+              )
+            })}
             <button
               onClick={() => setExpanded(false)}
               style={{

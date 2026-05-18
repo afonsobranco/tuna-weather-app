@@ -22,12 +22,22 @@ export function toneColors(tone) {
 }
 
 // WMO code → tomorrow tile condition
-export function tomorrowCondition(iconKind) {
-  const map = {
-    rain:  { label: 'Rain expected',  icon: 'rain',   tip: 'Pack an umbrella',       accent: '#6FA8E8' },
-    storm: { label: 'Stormy',         icon: 'storm',  tip: 'Avoid early commute',    accent: '#FFCB45' },
-    cloud: { label: 'Overcast',       icon: 'cloud',  tip: 'Layer up — slow warmth', accent: '#C9D2E0' },
-    moon:  { label: 'Clear',          icon: 'partly', tip: 'Crisp start',            accent: '#FFD18A' },
+// tr is optional — if provided, labels/tips are translated
+export function tomorrowCondition(iconKind, tr) {
+  const icons = {
+    rain:  { icon: 'rain',   accent: '#6FA8E8' },
+    storm: { icon: 'storm',  accent: '#FFCB45' },
+    cloud: { icon: 'cloud',  accent: '#C9D2E0' },
+    moon:  { icon: 'partly', accent: '#FFD18A' },
   }
-  return map[iconKind] || { label: 'Clear & cool', icon: 'partly', tip: 'Great for a run', accent: '#FFD18A' }
+  const englishLabels = {
+    rain:  { label: 'Rain expected',  tip: 'Pack an umbrella' },
+    storm: { label: 'Stormy',         tip: 'Avoid early commute' },
+    cloud: { label: 'Overcast',       tip: 'Layer up — slow warmth' },
+    moon:  { label: 'Clear',          tip: 'Crisp start' },
+  }
+  const defaultEnglish = { label: 'Clear & cool', tip: 'Great for a run' }
+  const baseIcon = icons[iconKind] || { icon: 'partly', accent: '#FFD18A' }
+  const translated = (tr?.tomorrowConditions?.[iconKind]) || (tr?.tomorrowConditions?.default) || englishLabels[iconKind] || defaultEnglish
+  return { ...baseIcon, label: translated.label, tip: translated.tip }
 }

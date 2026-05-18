@@ -6,6 +6,11 @@ export default function Forecast({ data, unit, tr }) {
   if (!data || !data.forecast || data.forecast.length === 0) return null
 
   const forecast = data.forecast
+  const translateDay = (d) => {
+    if (d === 'Today')    return tr.today
+    if (d === 'Tomorrow') return tr.tomorrow
+    return tr.days?.[d] || d
+  }
 
   return (
     <div style={{ padding: '0 16px 12px' }}>
@@ -38,7 +43,7 @@ export default function Forecast({ data, unit, tr }) {
         {forecast.map((day, idx) => {
           const hi = T(day.hi, unit)
           const lo = T(day.lo, unit)
-          const isToday = day.d === 'Today' || idx === 0
+          const isToday = idx === 0
 
           return (
             <Glass
@@ -65,7 +70,7 @@ export default function Forecast({ data, unit, tr }) {
                   letterSpacing: 0.3,
                 }}
               >
-                {day.d}
+                {translateDay(day.d)}
               </div>
 
               {/* Icon */}

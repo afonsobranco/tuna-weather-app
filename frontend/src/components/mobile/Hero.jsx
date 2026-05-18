@@ -62,7 +62,7 @@ export default function Hero({ data, unit, tr, weatherState }) {
             letterSpacing: '-0.2px',
           }}
         >
-          {data.condition}
+          {tr.conditions?.[data.condition] || data.condition}
         </div>
 
         {/* Feels like + H/L */}

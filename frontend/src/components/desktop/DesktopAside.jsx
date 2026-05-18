@@ -21,8 +21,15 @@ function ParchmentGrain() {
 export default function DesktopAside({ data, unit, tr }) {
   if (!data) return null
 
+  const locale = tr?.dateLocale || 'en'
   const today = new Date()
-  const dateLabel = `${today.getDate()} ${today.toLocaleDateString('en', { month: 'short' })}`
+  const dateLabel = `${today.getDate()} ${today.toLocaleDateString(locale, { month: 'short' })}`
+
+  const translateDay = (d) => {
+    if (d === 'Today')    return tr?.today    || d
+    if (d === 'Tomorrow') return tr?.tomorrow || d
+    return tr?.days?.[d] || d
+  }
 
   // 7-day forecast range normalization
   const allHi = data.forecast.map(d => d.hi)
@@ -123,7 +130,7 @@ export default function DesktopAside({ data, unit, tr }) {
               alignItems: 'center', gap: 10, padding: '8px 0',
               borderTop: i ? '1px solid rgba(255,255,255,0.10)' : 'none',
             }}>
-              <div style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>{d.d}</div>
+              <div style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>{translateDay(d.d)}</div>
               <ForecastIcon kind={d.i} size={22} />
               <div style={{
                 color: 'rgba(160,200,255,0.95)', fontSize: 11, fontWeight: 600,

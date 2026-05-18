@@ -112,7 +112,7 @@ export default function DesktopLayout({
         </main>
 
         {data && (
-          <DesktopAside data={data} unit={unit} tr={tr} />
+          <DesktopAside data={data} unit={unit} tr={tr} language={language} />
         )}
       </div>
     </div>

@@ -41,4 +41,64 @@ export default {
   enableLocation: "Open Settings",
   addCity: "Add a city",
   madeWith: "made with cold currents.",
+
+  // Weather condition labels (keyed by the English string from the API)
+  conditions: {
+    'Clear Sky':           'Clear Sky',
+    'Mainly Clear':        'Mainly Clear',
+    'Partly Cloudy':       'Partly Cloudy',
+    'Overcast':            'Overcast',
+    'Foggy':               'Foggy',
+    'Icy Fog':             'Icy Fog',
+    'Light Drizzle':       'Light Drizzle',
+    'Drizzle':             'Drizzle',
+    'Heavy Drizzle':       'Heavy Drizzle',
+    'Freezing Drizzle':    'Freezing Drizzle',
+    'Light Rain':          'Light Rain',
+    'Rain':                'Rain',
+    'Heavy Rain':          'Heavy Rain',
+    'Freezing Rain':       'Freezing Rain',
+    'Light Snow':          'Light Snow',
+    'Snow':                'Snow',
+    'Heavy Snow':          'Heavy Snow',
+    'Snow Grains':         'Snow Grains',
+    'Rain Showers':        'Rain Showers',
+    'Heavy Showers':       'Heavy Showers',
+    'Snow Showers':        'Snow Showers',
+    'Heavy Snow Showers':  'Heavy Snow Showers',
+    'Thunderstorm':        'Thunderstorm',
+  },
+
+  // UV index classification labels
+  uvLabels: {
+    'None': 'None', 'Low': 'Low', 'Moderate': 'Moderate',
+    'High': 'High', 'Very High': 'Very High', 'Extreme': 'Extreme',
+  },
+
+  // Air quality classification labels
+  aqiLabels: {
+    'Excellent': 'Excellent', 'Good': 'Good', 'Moderate': 'Moderate',
+    'Unhealthy': 'Unhealthy', 'Hazardous': 'Hazardous',
+  },
+
+  // Compass wind directions
+  windDirs: { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SW', W: 'W', NW: 'NW' },
+
+  // Short day names for forecast strip
+  days: { Mon: 'Mon', Tue: 'Tue', Wed: 'Wed', Thu: 'Thu', Fri: 'Fri', Sat: 'Sat', Sun: 'Sun' },
+
+  // Tomorrow tile condition labels + tips
+  tomorrowConditions: {
+    rain:    { label: 'Rain expected',  tip: 'Pack an umbrella' },
+    storm:   { label: 'Stormy',         tip: 'Avoid early commute' },
+    cloud:   { label: 'Overcast',       tip: 'Layer up — slow warmth' },
+    moon:    { label: 'Clear',          tip: 'Crisp start' },
+    default: { label: 'Clear & cool',   tip: 'Great for a run' },
+  },
+
+  // Health score breakdown factor labels
+  healthFactors: ['UV Index', 'Air Quality', 'Dewpoint / Humidity', 'Wind'],
+
+  // Date locale for JS toLocaleDateString
+  dateLocale: 'en',
 }

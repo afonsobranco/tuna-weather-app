@@ -41,4 +41,64 @@ export default {
   enableLocation: "Abrir Definições",
   addCity: "Adicionar cidade",
   madeWith: "feito com correntes frias.",
+
+  // Condições meteorológicas
+  conditions: {
+    'Clear Sky':           'Céu limpo',
+    'Mainly Clear':        'Maioritariamente limpo',
+    'Partly Cloudy':       'Parcialmente nublado',
+    'Overcast':            'Nublado',
+    'Foggy':               'Nevoeiro',
+    'Icy Fog':             'Nevoeiro glacial',
+    'Light Drizzle':       'Chuvisco fraco',
+    'Drizzle':             'Chuvisco',
+    'Heavy Drizzle':       'Chuvisco forte',
+    'Freezing Drizzle':    'Chuvisco gelado',
+    'Light Rain':          'Chuva fraca',
+    'Rain':                'Chuva',
+    'Heavy Rain':          'Chuva forte',
+    'Freezing Rain':       'Chuva gelada',
+    'Light Snow':          'Neve fraca',
+    'Snow':                'Neve',
+    'Heavy Snow':          'Neve forte',
+    'Snow Grains':         'Grãos de neve',
+    'Rain Showers':        'Aguaceiros',
+    'Heavy Showers':       'Aguaceiros fortes',
+    'Snow Showers':        'Aguaceiros de neve',
+    'Heavy Snow Showers':  'Aguaceiros de neve fortes',
+    'Thunderstorm':        'Trovoada',
+  },
+
+  // Classificação do índice UV
+  uvLabels: {
+    'None': 'Nenhum', 'Low': 'Baixo', 'Moderate': 'Moderado',
+    'High': 'Alto', 'Very High': 'Muito Alto', 'Extreme': 'Extremo',
+  },
+
+  // Classificação da qualidade do ar
+  aqiLabels: {
+    'Excellent': 'Excelente', 'Good': 'Bom', 'Moderate': 'Moderado',
+    'Unhealthy': 'Prejudicial', 'Hazardous': 'Perigoso',
+  },
+
+  // Direções do vento (rosa dos ventos em PT)
+  windDirs: { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SO', W: 'O', NW: 'NO' },
+
+  // Abreviações dos dias da semana
+  days: { Mon: 'Seg', Tue: 'Ter', Wed: 'Qua', Thu: 'Qui', Fri: 'Sex', Sat: 'Sáb', Sun: 'Dom' },
+
+  // Condição de amanhã — legendas e dicas
+  tomorrowConditions: {
+    rain:    { label: 'Chuva prevista',     tip: 'Leva um chapéu de chuva' },
+    storm:   { label: 'Tempo tempestuoso',  tip: 'Evita sair cedo' },
+    cloud:   { label: 'Nublado',            tip: 'Veste camadas — aquece devagar' },
+    moon:    { label: 'Céu limpo',          tip: 'Início fresco' },
+    default: { label: 'Fresco e limpo',     tip: 'Ótimo para correr' },
+  },
+
+  // Fatores do score de saúde
+  healthFactors: ['Índice UV', 'Qualidade do Ar', 'Ponto de Orvalho / Humidade', 'Vento'],
+
+  // Locale para datas em JS
+  dateLocale: 'pt',
 }

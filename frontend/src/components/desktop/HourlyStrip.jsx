@@ -2,6 +2,13 @@ import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { T } from '../../utils/unitUtils'
 
+// Extract HH:MM directly from the ISO string — no locale/cache dependency
+function formatHour(timeStr) {
+  if (!timeStr) return '—'
+  const t = timeStr.split('T')[1]
+  return t ? t.slice(0, 5) : '—'
+}
+
 export default function HourlyStrip({ data, unit, tr }) {
   const hourly = data?.hourly || []
   if (!hourly.length) return null
@@ -30,7 +37,7 @@ export default function HourlyStrip({ data, unit, tr }) {
   const areaPath = `${path} L ${last.x} ${H} L ${first.x} ${H} Z`
 
   return (
-    <Glass style={{ padding: '14px 18px' }}>
+    <Glass style={{ padding: '16px 28px' }}>
       <div style={{
         display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
         marginBottom: 6,
@@ -111,7 +118,7 @@ export default function HourlyStrip({ data, unit, tr }) {
               letterSpacing: h.isNow ? 0.6 : 0.4,
               textTransform: h.isNow ? 'uppercase' : 'none',
             }}>
-              {h.isNow ? (tr?.now || 'Now') : h.label}
+              {h.isNow ? (tr?.now || 'Now') : formatHour(h.time)}
             </div>
           </div>
         ))}

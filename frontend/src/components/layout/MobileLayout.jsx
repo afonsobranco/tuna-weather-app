@@ -94,7 +94,7 @@ export default function MobileLayout({
               onSearch={onSearch}
               onLanguageChange={onLanguageChange}
             />
-            <Hero data={data} unit={unit} weatherState={weatherState} />
+            <Hero data={data} unit={unit} tr={tr} weatherState={weatherState} />
             <TomorrowTile data={data} unit={unit} tr={tr} />
             <HealthDashboard data={data} tr={tr} />
             <Astronomy data={data} tr={tr} />

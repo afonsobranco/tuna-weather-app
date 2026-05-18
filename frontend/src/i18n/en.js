@@ -101,4 +101,9 @@ export default {
 
   // Date locale for JS toLocaleDateString
   dateLocale: 'en',
+
+  // Relative time strings
+  timeJustNow: 'just now',
+  timeMinAgo: (n) => `${n} min ago`,
+  timeHrAgo:  (n) => `${n}h ago`,
 }

@@ -491,7 +491,7 @@ async def get_weather(city: str = Query(..., min_length=1, max_length=100)) -> J
         h_code = int(hourly_codes[idx]) if idx < len(hourly_codes) else 0
         try:
             h_dt = datetime.fromisoformat(h_raw)
-            h_label = "Now" if i == 0 else h_dt.strftime("%-I %p")
+            h_label = "Now" if i == 0 else h_dt.strftime("%H:%M")
         except Exception:
             h_label = "Now" if i == 0 else "—"
         night_h = not (6 <= (datetime.fromisoformat(h_raw).hour if h_raw else 12) < 20)

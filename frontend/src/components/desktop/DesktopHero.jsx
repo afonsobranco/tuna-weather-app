@@ -52,7 +52,7 @@ export default function DesktopHero({
   const hi = T(data.hiC, unit)
   const lo = T(data.loC, unit)
   const feels = T(data.feelsLikeC, unit)
-  const lastUpd = relativeTime(data.fetchedAt)
+  const lastUpd = relativeTime(data.fetchedAt, tr)
 
   return (
     <div style={{ padding: '28px 28px 0' }}>
@@ -158,7 +158,7 @@ export default function DesktopHero({
             </div>
             <div style={{ marginTop: 12 }}>
               <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 22, fontWeight: 400, color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
-                {tr.conditions?.[data.condition] || data.condition}
+                {tr?.conditions?.[data.condition] || data.condition}
               </div>
               <div style={{ display: 'flex', gap: 16, fontFamily: '"Geist", system-ui, sans-serif', fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>
                 <span>{tr.feels} {feels}°</span>
@@ -180,21 +180,21 @@ export default function DesktopHero({
           icon={<GUV size={13} color="rgba(255,255,255,0.5)" />}
           label={tr.uvIndex}
           value={data.uv?.value ?? 0}
-          tone={tr.uvLabels?.[data.uv?.label] || data.uv?.label}
+          tone={tr?.uvLabels?.[data.uv?.label] || data.uv?.label}
           toneTone={data.uv?.tone}
         />
         <MetricCell
           icon={<GLeaf size={13} color="rgba(255,255,255,0.5)" />}
           label={tr.airQuality}
           value={data.aqi?.value ?? 0}
-          tone={tr.aqiLabels?.[data.aqi?.label] || data.aqi?.label}
+          tone={tr?.aqiLabels?.[data.aqi?.label] || data.aqi?.label}
           toneTone={data.aqi?.tone}
         />
         <MetricCell
           icon={null}
           label={tr.wind}
           value={data.windSpeed ?? 0}
-          unit={`km/h ${tr.windDirs?.[data.windDir] || data.windDir || ''}`}
+          unit={`km/h ${tr?.windDirs?.[data.windDir] || data.windDir || ''}`}
         />
         <MetricCell
           icon={<GDrop size={13} color="rgba(255,255,255,0.5)" />}

@@ -101,4 +101,9 @@ export default {
 
   // Locale para datas em JS
   dateLocale: 'pt',
+
+  // Strings de tempo relativo
+  timeJustNow: 'agora',
+  timeMinAgo: (n) => `há ${n} min`,
+  timeHrAgo:  (n) => `há ${n} h`,
 }

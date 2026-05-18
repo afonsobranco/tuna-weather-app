@@ -35,9 +35,9 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [])
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1200)
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 1024)
+    const handler = () => setIsMobile(window.innerWidth < 1200)
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])

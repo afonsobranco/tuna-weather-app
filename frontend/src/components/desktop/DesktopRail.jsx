@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Glass from '../primitives/Glass'
 import AppMark from '../primitives/AppMark'
 import { GSearch, GLocate } from '../icons/UIGlyphs'
 import { useAppStore } from '../../context/AppContext'
 
 const LANG_FLAGS = { en: '🇬🇧', pt: '🇵🇹' }
+const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search'
 
 export default function DesktopRail({
   cityKey,
@@ -17,14 +18,44 @@ export default function DesktopRail({
   onLanguageChange,
 }) {
   const [query, setQuery] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const debounceRef = useRef(null)
+  const wrapperRef = useRef(null)
   const { savedCities, removeSavedCity } = useAppStore()
+
+  const handleChange = (e) => {
+    const val = e.target.value
+    setQuery(val)
+    clearTimeout(debounceRef.current)
+    if (val.trim().length < 2) { setSuggestions([]); return }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${GEO_URL}?name=${encodeURIComponent(val)}&count=5&language=${language}&format=json`)
+        const json = await res.json()
+        setSuggestions(json.results || [])
+      } catch { setSuggestions([]) }
+    }, 300)
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setSuggestions([]) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (query.trim()) {
       onSearch(query.trim())
       setQuery('')
+      setSuggestions([])
     }
+  }
+
+  const handleSuggestionClick = (s) => {
+    onSearch(s.name)
+    setQuery('')
+    setSuggestions([])
   }
 
   const nextLang = language === 'en' ? 'pt' : 'en'
@@ -80,26 +111,56 @@ export default function DesktopRail({
         </div>
       </div>
 
-      {/* Search */}
-      <Glass style={{ borderRadius: 999, height: 44, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8 }}>
-        <GSearch size={15} color="rgba(255,255,255,0.45)" />
-        <form onSubmit={handleSubmit} style={{ flex: 1, display: 'flex' }}>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={tr.searchPlaceholder}
-            style={{
-              flex: 1,
-              background: 'none',
-              border: 'none',
-              outline: 'none',
-              color: '#fff',
-              fontFamily: '"Geist", system-ui, sans-serif',
-              fontSize: 13,
-            }}
-          />
-        </form>
-      </Glass>
+      {/* Search + autocomplete */}
+      <div ref={wrapperRef} style={{ position: 'relative' }}>
+        <Glass style={{ borderRadius: 999, height: 44, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8 }}>
+          <GSearch size={15} color="rgba(255,255,255,0.45)" />
+          <form onSubmit={handleSubmit} style={{ flex: 1, display: 'flex' }}>
+            <input
+              value={query}
+              onChange={handleChange}
+              placeholder={tr.searchPlaceholder}
+              style={{
+                flex: 1,
+                background: 'none',
+                border: 'none',
+                outline: 'none',
+                color: '#fff',
+                fontFamily: '"Geist", system-ui, sans-serif',
+                fontSize: 13,
+              }}
+            />
+          </form>
+        </Glass>
+        {suggestions.length > 0 && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+            marginTop: 6, borderRadius: 14, overflow: 'hidden',
+            background: 'rgba(10,25,50,0.96)', backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          }}>
+            {suggestions.map((s, i) => (
+              <button key={i} onMouseDown={() => handleSuggestionClick(s)} style={{
+                width: '100%', background: 'none', cursor: 'pointer', padding: '9px 12px',
+                border: 'none', borderTop: i ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <GSearch size={12} color="rgba(255,255,255,0.3)" />
+                <div>
+                  <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 13, color: '#fff', fontWeight: 500 }}>
+                    {s.name}
+                  </span>
+                  <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.4)', marginLeft: 5 }}>
+                    {[s.admin1, s.country].filter(Boolean).join(', ')}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Saved cities */}
       <div style={{ flex: 1 }}>

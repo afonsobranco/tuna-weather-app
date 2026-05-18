@@ -11,8 +11,8 @@ const SHELL_CACHE = 'tuna-shell-v1'
 const API_CACHE   = 'tuna-api-v1'
 
 const SHELL_URLS = [
-  '/tuna-weather-app/',
-  '/tuna-weather-app/index.html',
+  '/',
+  '/index.html',
 ]
 
 // ── Install: pre-cache app shell ─────────────────────────────────────────────

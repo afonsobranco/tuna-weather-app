@@ -2,8 +2,8 @@
   "name": "Tuna Weather App",
   "short_name": "Tuna",
   "description": "Weather + the stories of every place.",
-  "start_url": "/tuna-weather-app/",
-  "scope": "/tuna-weather-app/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0d2e44",
@@ -11,13 +11,13 @@
   "lang": "en",
   "icons": [
     {
-      "src": "/tuna-weather-app/icons/icon.svg",
+      "src": "/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/tuna-weather-app/icons/icon-maskable.svg",
+      "src": "/icons/icon-maskable.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"

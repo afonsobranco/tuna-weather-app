@@ -4,7 +4,7 @@
 
 A fully free-to-host Progressive Web App (PWA) combining real-time weather data with "On This Day" historical events for any city in the world.
 
-**Live demo:** https://afonsobranco.github.io/tuna-weather-app/
+**Live demo:** https://tuna-weather-app.vercel.app
 
 ---
 

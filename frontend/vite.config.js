@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // GitHub Pages serves from /tuna-weather-app/
-  base: '/tuna-weather-app/',
+  // Vercel serves from root
+  base: '/',
   build: {
     outDir: 'dist',
     sourcemap: false,

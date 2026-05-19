@@ -11,10 +11,10 @@ import DesktopLayout from './components/layout/DesktopLayout'
 export default function App() {
   const [showSplash, setShowSplash] = useState(true)
   const [splashFading, setSplashFading] = useState(false)
-  // Restore last viewed city on mount
-  const [searchCity, setSearchCity] = useState(() => lastCity || null)
   const { unit, toggleUnit, language, setLanguage, t,
           lastCity, setLastCity, setCityTemp, cityTemps, addSavedCity } = useAppStore()
+  // Restore last viewed city on mount
+  const [searchCity, setSearchCity] = useState(() => lastCity || null)
   const tr = t()
 
   // Geolocation

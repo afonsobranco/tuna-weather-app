@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAppStore } from './context/AppContext'
 import { useWeather } from './hooks/useWeather'
 import { useGeolocation } from './hooks/useGeolocation'
@@ -11,8 +11,10 @@ import DesktopLayout from './components/layout/DesktopLayout'
 export default function App() {
   const [showSplash, setShowSplash] = useState(true)
   const [splashFading, setSplashFading] = useState(false)
-  const [searchCity, setSearchCity] = useState(null)
-  const { unit, toggleUnit, language, setLanguage, t } = useAppStore()
+  // Restore last viewed city on mount
+  const [searchCity, setSearchCity] = useState(() => lastCity || null)
+  const { unit, toggleUnit, language, setLanguage, t,
+          lastCity, setLastCity, setCityTemp, cityTemps, addSavedCity } = useAppStore()
   const tr = t()
 
   // Geolocation
@@ -42,8 +44,20 @@ export default function App() {
     return () => window.removeEventListener('resize', handler)
   }, [])
 
+  // Persist temperature whenever fresh data arrives
+  const prevCityRef = useRef(null)
+  useEffect(() => {
+    if (data?.city && data?.tempC != null && data.city !== prevCityRef.current) {
+      prevCityRef.current = data.city
+      setCityTemp(activeCity || data.city, data.tempC)
+    }
+  }, [data])
+
   const handleSearch = (city) => {
-    if (city && city.trim()) setSearchCity(city.trim())
+    if (city && city.trim()) {
+      setSearchCity(city.trim())
+      setLastCity(city.trim())
+    }
   }
 
   const commonProps = {
@@ -60,6 +74,8 @@ export default function App() {
     onRefetch: refetch,
     weatherState: data?.weatherState || 'clear-day',
     geoStatus,
+    addSavedCity,
+    cityTemps,
   }
 
   return (

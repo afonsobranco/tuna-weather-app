@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import Glass from '../primitives/Glass'
 import { GSearch, GLocate } from '../icons/UIGlyphs'
+import { useAppStore } from '../../context/AppContext'
 
 const LANG_FLAGS = { en: '🇬🇧', pt: '🇵🇹' }
 const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search'
 
-export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSearch, onLanguageChange }) {
+export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSearch, onLanguageChange, addSavedCity }) {
+  const { savedCities, removeSavedCity } = useAppStore()
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
   const [suggestions, setSuggestions] = useState([])
@@ -228,36 +230,37 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
 
       {/* City name row */}
       {data && (
-        <div
-          style={{
-            marginTop: 8,
-            paddingLeft: 4,
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: 6,
-            flexWrap: 'wrap',
-          }}
-        >
-          <span
-            style={{
-              fontFamily: '"Geist", system-ui, sans-serif',
-              fontWeight: 500,
-              fontSize: 15,
-              color: 'rgba(255,255,255,0.9)',
-            }}
-          >
-            {data.city},
-          </span>
-          <span
-            style={{
-              fontFamily: '"Geist", system-ui, sans-serif',
-              fontWeight: 400,
-              fontSize: 13,
-              color: 'rgba(255,255,255,0.55)',
-            }}
-          >
-            {data.flag} · {data.country} · {dateStr}
-          </span>
+        <div style={{ marginTop: 8, paddingLeft: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 500, fontSize: 15, color: 'rgba(255,255,255,0.9)' }}>
+              {data.city},
+            </span>
+            <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 400, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
+              {data.flag} · {data.country} · {dateStr}
+            </span>
+          </div>
+          {/* Save / unsave button */}
+          {(() => {
+            const isSaved = savedCities.includes(data.city)
+            return (
+              <button
+                onClick={() => isSaved ? removeSavedCity(data.city) : addSavedCity?.(data.city)}
+                style={{
+                  background: isSaved ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  padding: '4px 10px',
+                  fontSize: 15,
+                  color: isSaved ? '#FFD45A' : 'rgba(255,255,255,0.4)',
+                  flexShrink: 0,
+                  lineHeight: 1,
+                }}
+              >
+                {isSaved ? '★' : '☆'}
+              </button>
+            )
+          })()}
         </div>
       )}
     </div>

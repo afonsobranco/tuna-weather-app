@@ -9,6 +9,7 @@ const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search'
 
 export default function DesktopRail({
   cityKey,
+  data,
   unit,
   language,
   tr,
@@ -16,12 +17,16 @@ export default function DesktopRail({
   onToggleUnit,
   onSearch,
   onLanguageChange,
+  activeCityName,
+  addSavedCity,
+  cityTemps,
 }) {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const debounceRef = useRef(null)
   const wrapperRef = useRef(null)
   const { savedCities, removeSavedCity } = useAppStore()
+  const isCitySaved = data?.city ? savedCities.includes(data.city) : false
 
   const handleChange = (e) => {
     const val = e.target.value
@@ -162,6 +167,34 @@ export default function DesktopRail({
         )}
       </div>
 
+      {/* Nav */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {[
+          { key: 'today', label: tr?.today || 'Today', active: true },
+          { key: '5day', label: tr?.forecast7day || '5-Day', active: false },
+          { key: 'history', label: tr?.onThisDay || 'On this day', active: false },
+        ].map(({ key, label, active }) => (
+          <div key={key} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '9px 12px', borderRadius: 10,
+            background: active ? 'rgba(255,255,255,0.10)' : 'transparent',
+            cursor: active ? 'default' : 'default',
+          }}>
+            <div style={{
+              width: 6, height: 6, borderRadius: 999,
+              background: active ? '#FFD45A' : 'rgba(255,255,255,0.2)',
+              flexShrink: 0,
+            }} />
+            <span style={{
+              fontFamily: '"Geist", system-ui, sans-serif',
+              fontSize: 13,
+              fontWeight: active ? 600 : 400,
+              color: active ? '#fff' : 'rgba(255,255,255,0.5)',
+            }}>{label}</span>
+          </div>
+        ))}
+      </div>
+
       {/* Saved cities */}
       <div style={{ flex: 1 }}>
         <div
@@ -199,16 +232,25 @@ export default function DesktopRail({
                   transition: 'background 0.15s ease',
                 }}
               >
-                <span
-                  style={{
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <span style={{
                     fontFamily: '"Geist", system-ui, sans-serif',
                     fontSize: 14,
                     fontWeight: isActive ? 600 : 400,
                     color: isActive ? '#fff' : 'rgba(255,255,255,0.65)',
-                  }}
-                >
-                  {city}
-                </span>
+                  }}>
+                    {city}
+                  </span>
+                  {cityTemps?.[city] != null && (
+                    <span style={{
+                      fontFamily: '"Geist", system-ui, sans-serif',
+                      fontSize: 11,
+                      color: 'rgba(255,255,255,0.35)',
+                    }}>
+                      {unit === 'F' ? Math.round(cityTemps[city] * 9/5 + 32) : Math.round(cityTemps[city])}°
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); removeSavedCity(city) }}
                   style={{
@@ -230,6 +272,29 @@ export default function DesktopRail({
             )
           })}
         </div>
+        {data?.city && (
+          <button
+            onClick={() => isCitySaved ? removeSavedCity(data.city) : addSavedCity?.(data.city)}
+            style={{
+              marginTop: 8,
+              width: '100%',
+              padding: '9px 12px',
+              borderRadius: 10,
+              border: '1px dashed rgba(255,255,255,0.2)',
+              background: 'transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              color: isCitySaved ? '#FFD45A' : 'rgba(255,255,255,0.45)',
+              fontFamily: '"Geist", system-ui, sans-serif',
+              fontSize: 13,
+            }}
+          >
+            <span>{isCitySaved ? '★' : '+'}</span>
+            <span>{isCitySaved ? `${data.city} saved` : `Save ${data.city}`}</span>
+          </button>
+        )}
       </div>
 
       {/* Footer controls */}

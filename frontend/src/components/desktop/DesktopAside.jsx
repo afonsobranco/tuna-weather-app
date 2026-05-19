@@ -18,7 +18,7 @@ function ParchmentGrain() {
   )
 }
 
-export default function DesktopAside({ data, unit, tr }) {
+export default function DesktopAside({ data, unit, tr, language, selectedDayIdx = 0, onDaySelect }) {
   if (!data) return null
 
   const locale = tr?.dateLocale || 'en'
@@ -124,12 +124,22 @@ export default function DesktopAside({ data, unit, tr }) {
           const loPct = (d.lo - minT) / range
           const hiPct = (d.hi - minT) / range
           return (
-            <div key={i} style={{
-              display: 'grid',
-              gridTemplateColumns: '46px 24px 40px 1fr 40px',
-              alignItems: 'center', gap: 10, padding: '8px 0',
-              borderTop: i ? '1px solid rgba(255,255,255,0.10)' : 'none',
-            }}>
+            <button
+              key={i}
+              onClick={() => onDaySelect?.(i)}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '46px 24px 40px 1fr 40px',
+                alignItems: 'center', gap: 10,
+                padding: '8px 6px',
+                borderRadius: 10,
+                border: 'none',
+                background: i === selectedDayIdx ? 'rgba(255,255,255,0.08)' : 'transparent',
+                cursor: 'pointer',
+                width: '100%',
+                borderTop: i ? '1px solid rgba(255,255,255,0.10)' : 'none',
+              }}
+            >
               <div style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>{translateDay(d.d)}</div>
               <ForecastIcon kind={d.i} size={22} />
               <div style={{
@@ -155,7 +165,7 @@ export default function DesktopAside({ data, unit, tr }) {
               }}>
                 {T(d.hi, unit)}°<span style={{ opacity: 0.5, marginLeft: 4 }}>{T(d.lo, unit)}°</span>
               </div>
-            </div>
+            </button>
           )
         })}
       </Glass>

@@ -11,11 +11,15 @@ export const useAppStore = create(
       unit: 'C',
       language: 'en',
       savedCities: ['Lisbon', 'London', 'Reykjavík', 'Tokyo'],
-      currentCity: null,
+      lastCity: null,      // persisted last viewed city
+      cityTemps: {},       // { cityName: tempC } — last known temp per city
 
       toggleUnit: () => set((s) => ({ unit: s.unit === 'C' ? 'F' : 'C' })),
       setLanguage: (lang) => set({ language: lang }),
-      setCurrentCity: (city) => set({ currentCity: city }),
+      setLastCity: (city) => set({ lastCity: city }),
+      setCityTemp: (city, tempC) => set((s) => ({
+        cityTemps: { ...s.cityTemps, [city]: tempC },
+      })),
       addSavedCity: (city) => set((s) => ({
         savedCities: s.savedCities.includes(city)
           ? s.savedCities
@@ -32,6 +36,8 @@ export const useAppStore = create(
         unit: state.unit,
         language: state.language,
         savedCities: state.savedCities,
+        lastCity: state.lastCity,
+        cityTemps: state.cityTemps,
       }),
     }
   )

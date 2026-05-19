@@ -23,6 +23,7 @@ export default function MobileLayout({
   onSearch,
   onLanguageChange,
   onRefetch,
+  addSavedCity,
 }) {
   // Determine which state to show
   const showSkeleton = isLoading && !data
@@ -93,6 +94,7 @@ export default function MobileLayout({
               onToggleUnit={onToggleUnit}
               onSearch={onSearch}
               onLanguageChange={onLanguageChange}
+              addSavedCity={addSavedCity}
             />
             <Hero data={data} unit={unit} tr={tr} weatherState={weatherState} />
             <TomorrowTile data={data} unit={unit} tr={tr} />

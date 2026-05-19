@@ -15,7 +15,7 @@ import asyncio
 import json
 import math
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any
 
 import httpx
@@ -464,6 +464,33 @@ async def get_weather(city: str = Query(..., min_length=1, max_length=100)) -> J
             "lo": round(lo_arr[i]) if i < len(lo_arr) else 0,
             "p": int(pp_arr[i]) if i < len(pp_arr) else 0,
         })
+
+    # 5b. Attach per-day hourly data to each forecast item
+    hourly_temps = weather_data.get("hourly", {}).get("temperature_2m", [])
+    hourly_codes = weather_data.get("hourly", {}).get("weather_code", [])
+    hourly_times = weather_data.get("hourly", {}).get("time", [])
+    for day_idx in range(len(forecast)):
+        day_prefix = (now + timedelta(days=day_idx)).strftime("%Y-%m-%d")
+        day_entries = []
+        for idx, t in enumerate(hourly_times):
+            if not t.startswith(day_prefix):
+                continue
+            if idx >= len(hourly_temps):
+                continue
+            h_code = int(hourly_codes[idx]) if idx < len(hourly_codes) else 0
+            try:
+                dt_h = datetime.fromisoformat(t)
+                night_h = not (6 <= dt_h.hour < 20)
+                is_now = (day_idx == 0 and t.startswith(now.strftime("%Y-%m-%dT%H")))
+            except Exception:
+                night_h, is_now = False, False
+            day_entries.append({
+                "time": t,
+                "tempC": round(hourly_temps[idx]),
+                "icon": icon_for_forecast(h_code, night_h),
+                "isNow": is_now,
+            })
+        forecast[day_idx]["hourly"] = day_entries[::2][:12]  # every 2h, max 12
 
     # 6. Build hourly array (next 24h in 2h steps = 12 entries)
     hourly_temps = weather_data.get("hourly", {}).get("temperature_2m", [])

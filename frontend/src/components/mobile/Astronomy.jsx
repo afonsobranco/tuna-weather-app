@@ -1,13 +1,13 @@
 import Glass from '../primitives/Glass'
 import { GSunrise, GSunset, GHourglass } from '../icons/UIGlyphs'
 
-export default function Astronomy({ data, tr }) {
+export default function Astronomy({ data, tr, noPadding }) {
   if (!data) return null
 
   const { sunrise, sunset, daylight } = data
 
   return (
-    <div style={{ padding: '0 16px 12px' }}>
+    <div style={noPadding ? {} : { padding: '0 16px 12px' }}>
       <Glass style={{ padding: '16px' }}>
         {/* Sunrise / Sunset row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

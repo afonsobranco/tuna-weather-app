@@ -6,6 +6,8 @@ import HourlyStrip from '../desktop/HourlyStrip'
 import DesktopAside from '../desktop/DesktopAside'
 import SkeletonLoader from '../states/SkeletonLoader'
 import EmptyState from '../states/EmptyStates'
+import Astronomy from '../mobile/Astronomy'
+import Glass from '../primitives/Glass'
 
 export default function DesktopLayout({
   data,
@@ -21,8 +23,11 @@ export default function DesktopLayout({
   onSearch,
   onLanguageChange,
   onRefetch,
+  addSavedCity,
+  cityTemps,
 }) {
   const [activeCityName, setActiveCityName] = useState(null)
+  const [selectedDayIdx, setSelectedDayIdx] = useState(0)
 
   const handleCityClick = (city) => {
     setActiveCityName(city)
@@ -74,6 +79,8 @@ export default function DesktopLayout({
           onToggleUnit={onToggleUnit}
           onLanguageChange={onLanguageChange}
           activeCityName={activeCityName || data?.city}
+          addSavedCity={addSavedCity}
+          cityTemps={cityTemps}
         />
 
         {/* Center: hero + hourly */}
@@ -106,13 +113,55 @@ export default function DesktopLayout({
                 onRefetch={onRefetch}
                 isStale={isStale}
               />
-              <HourlyStrip data={data} unit={unit} tr={tr} />
+              <HourlyStrip
+                hourly={data.forecast?.[selectedDayIdx]?.hourly || data.hourly}
+                data={data}
+                unit={unit}
+                tr={tr}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <Astronomy data={data} tr={tr} noPadding />
+                <Glass style={{ padding: '16px 20px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+                    {tr?.dailyHealthScore || 'Daily Health Score'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    {(() => {
+                      const score = data.health?.score ?? 0
+                      const color = score >= 75 ? '#3ed28b' : score >= 50 ? '#ffa850' : '#ff5a5a'
+                      const r = 26, circ = 2 * Math.PI * r, dash = (score / 100) * circ
+                      return (
+                        <>
+                          <svg width={64} height={64} viewBox="0 0 64 64" style={{ flexShrink: 0 }}>
+                            <circle cx={32} cy={32} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={6} />
+                            <circle cx={32} cy={32} r={r} fill="none" stroke={color} strokeWidth={6}
+                              strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={circ * 0.25}
+                              strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.8s ease' }} />
+                            <text x={32} y={37} textAnchor="middle" fill={color} fontSize={16} fontWeight={600}
+                              fontFamily="Geist, system-ui, sans-serif">{score}</text>
+                          </svg>
+                          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
+                            {data.health?.tip || ''}
+                          </div>
+                        </>
+                      )
+                    })()}
+                  </div>
+                </Glass>
+              </div>
             </>
           )}
         </main>
 
         {data && (
-          <DesktopAside data={data} unit={unit} tr={tr} language={language} />
+          <DesktopAside
+            data={data}
+            unit={unit}
+            tr={tr}
+            language={language}
+            selectedDayIdx={selectedDayIdx}
+            onDaySelect={setSelectedDayIdx}
+          />
         )}
       </div>
     </div>

@@ -9,8 +9,8 @@ function formatHour(timeStr) {
   return t ? t.slice(0, 5) : '—'
 }
 
-export default function HourlyStrip({ data, unit, tr }) {
-  const hourly = data?.hourly || []
+export default function HourlyStrip({ hourly: hourlyProp, data, unit, tr }) {
+  const hourly = hourlyProp || data?.hourly || []
   if (!hourly.length) return null
 
   const W = 1200, H = 64

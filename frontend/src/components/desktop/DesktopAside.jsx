@@ -54,7 +54,7 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
           position: 'relative',
         }}>
           <div style={{
-            fontFamily: '"Instrument Serif", serif', fontStyle: 'italic',
+            fontFamily: '"Geist", system-ui, sans-serif', fontStyle: 'italic',
             color: '#fff8e7', fontSize: 26, letterSpacing: -0.3, lineHeight: 1,
           }}>
             {tr?.onThisDay || 'On this day'}
@@ -81,7 +81,7 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
               }}
             >
               <div style={{
-                fontFamily: '"Instrument Serif", serif', fontStyle: 'italic',
+                fontFamily: '"Geist", system-ui, sans-serif', fontStyle: 'italic',
                 color: '#ffe7b8', fontSize: 32, letterSpacing: -0.6, lineHeight: 1, paddingTop: 2,
               }}>
                 {h.year}

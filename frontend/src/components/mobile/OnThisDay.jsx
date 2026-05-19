@@ -43,7 +43,7 @@ export default function OnThisDay({ data, tr, onDateChange }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, position: 'relative' }}>
           <span
             style={{
-              fontFamily: '"Instrument Serif", serif',
+              fontFamily: '"Geist", system-ui, sans-serif',
               fontStyle: 'italic',
               fontSize: 22,
               color: 'rgba(255,240,200,0.92)',
@@ -87,7 +87,7 @@ export default function OnThisDay({ data, tr, onDateChange }) {
               {/* Year */}
               <span
                 style={{
-                  fontFamily: '"Instrument Serif", serif',
+                  fontFamily: '"Geist", system-ui, sans-serif',
                   fontStyle: 'italic',
                   fontSize: 28,
                   color: '#ffe7b8',

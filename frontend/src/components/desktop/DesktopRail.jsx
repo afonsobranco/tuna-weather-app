@@ -90,7 +90,7 @@ export default function DesktopRail({
         <div>
           <div
             style={{
-              fontFamily: '"Instrument Serif", serif',
+              fontFamily: '"Geist", system-ui, sans-serif',
               fontStyle: 'italic',
               fontSize: 22,
               color: '#fff',

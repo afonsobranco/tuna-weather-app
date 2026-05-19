@@ -83,7 +83,7 @@ export default function SplashScreen({ isDetecting = false, tr }) {
         <AppMark size={108} />
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            fontFamily: '"Instrument Serif", serif', fontStyle: 'italic',
+            fontFamily: '"Geist", system-ui, sans-serif', fontStyle: 'italic',
             color: '#fff', fontSize: 48, lineHeight: 1, letterSpacing: -0.6,
           }}>Tuna</div>
           <div style={{

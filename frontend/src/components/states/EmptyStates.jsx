@@ -92,7 +92,7 @@ export default function EmptyState({ variant = 'search-empty', tr, onCta }) {
         </div>
 
         <div style={{
-          fontFamily: '"Instrument Serif", serif', fontStyle: 'italic',
+          fontFamily: '"Geist", system-ui, sans-serif', fontStyle: 'italic',
           color: '#fff', fontSize: 20, lineHeight: 1.2,
         }}>
           {tr?.[v.titleKey] || v.defaultTitle}
@@ -128,7 +128,7 @@ export default function EmptyState({ variant = 'search-empty', tr, onCta }) {
       }}>
         <TunaFish size={40} />
         <div style={{
-          fontFamily: '"Instrument Serif", serif', fontStyle: 'italic',
+          fontFamily: '"Geist", system-ui, sans-serif', fontStyle: 'italic',
           color: 'rgba(255,255,255,0.55)', fontSize: 14,
         }}>
           {tr?.madeWith || 'made with cold currents.'}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import { useAppStore } from './context/AppContext'
 import { useWeather } from './hooks/useWeather'
 import { useGeolocation } from './hooks/useGeolocation'
@@ -103,6 +104,7 @@ export default function App() {
           <DesktopLayout {...commonProps} />
         )}
       </div>
+      <Analytics />
     </>
   )
 }

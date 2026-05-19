@@ -6,7 +6,7 @@ import './index.css'
 // Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/tuna-weather-app/sw.js').catch(() => {})
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
   })
 }
 

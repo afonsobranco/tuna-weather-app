@@ -44,8 +44,8 @@ export default function OnThisDay({ data, tr, onDateChange }) {
           <span
             style={{
               fontFamily: '"Geist", system-ui, sans-serif',
-              fontStyle: 'italic',
               fontSize: 22,
+              fontWeight: 600,
               color: 'rgba(255,240,200,0.92)',
               letterSpacing: '-0.3px',
             }}
@@ -88,8 +88,8 @@ export default function OnThisDay({ data, tr, onDateChange }) {
               <span
                 style={{
                   fontFamily: '"Geist", system-ui, sans-serif',
-                  fontStyle: 'italic',
                   fontSize: 28,
+                  fontWeight: 300,
                   color: '#ffe7b8',
                   display: 'block',
                   lineHeight: 1,

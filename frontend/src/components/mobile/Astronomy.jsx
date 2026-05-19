@@ -21,8 +21,7 @@ export default function Astronomy({ data, tr, noPadding }) {
             </div>
             <span
               style={{
-                fontFamily: '"Instrument Serif", serif',
-                fontStyle: 'italic',
+                fontFamily: '"Geist", system-ui, sans-serif',
                 fontSize: 30,
                 color: '#fff',
                 letterSpacing: '-0.5px',
@@ -62,8 +61,7 @@ export default function Astronomy({ data, tr, noPadding }) {
             </div>
             <span
               style={{
-                fontFamily: '"Instrument Serif", serif',
-                fontStyle: 'italic',
+                fontFamily: '"Geist", system-ui, sans-serif',
                 fontSize: 30,
                 color: '#fff',
                 letterSpacing: '-0.5px',
@@ -93,8 +91,7 @@ export default function Astronomy({ data, tr, noPadding }) {
             </span>
             <span
               style={{
-                fontFamily: '"Instrument Serif", serif',
-                fontStyle: 'italic',
+                fontFamily: '"Geist", system-ui, sans-serif',
                 fontSize: 16,
                 color: 'rgba(255,255,255,0.85)',
               }}

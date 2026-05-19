@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import Glass from '../primitives/Glass'
 import { ringColor } from '../../utils/weatherUtils'
 
@@ -31,14 +30,13 @@ function HealthRing({ score, size = 64 }) {
 }
 
 export default function DesktopHealthScore({ data, tr }) {
-  const [expanded, setExpanded] = useState(false)
   if (!data) return null
 
   const { uv, aqi, health } = data
-  const score = health?.score ?? 0
-  const tip = health?.tip ?? ''
+  const score     = health?.score ?? 0
+  const tip       = health?.tip ?? ''
   const windSpeed = data.windSpeed ?? 0
-  const humidity = data.humidity ?? 0
+  const humidity  = data.humidity ?? 0
 
   const uvFactor   = Math.min(100, ((uv?.value ?? 0) / 11) * 100)
   const aqiFactor  = Math.min(100, Math.max(0, 100 - ((aqi?.value ?? 0) / 200) * 100))
@@ -50,17 +48,19 @@ export default function DesktopHealthScore({ data, tr }) {
   const rcDew  = ringColor(dewFactor)
   const rcWind = ringColor(windFactor)
 
+  const factors = [
+    { weight: '25%', value: uvFactor,   color: rcUv   },
+    { weight: '40%', value: aqiFactor,  color: rcAqi  },
+    { weight: '20%', value: dewFactor,  color: rcDew  },
+    { weight: '15%', value: windFactor, color: rcWind },
+  ]
+
   return (
     <Glass style={{ padding: '16px 20px' }}>
-      <button
-        onClick={() => setExpanded(e => !e)}
-        style={{
-          width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-          padding: 0, display: 'flex', alignItems: 'center', gap: 14, minHeight: 44,
-        }}
-      >
+      {/* Score row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
         <HealthRing score={score} size={64} />
-        <div style={{ flex: 1, textAlign: 'left' }}>
+        <div style={{ flex: 1 }}>
           <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
             {tr?.dailyHealthScore || 'Daily Health Score'}
           </div>
@@ -68,48 +68,25 @@ export default function DesktopHealthScore({ data, tr }) {
             {tip}
           </div>
         </div>
-        <svg width={16} height={16} viewBox="0 0 16 16"
-          style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms ease', flexShrink: 0 }}>
-          <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.5)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      </button>
+      </div>
 
-      {/* Collapsible breakdown */}
-      <div style={{ maxHeight: expanded ? 300 : 0, overflow: 'hidden', transition: 'max-height 350ms cubic-bezier(.4,1,.4,1)' }}>
-        <div style={{ paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: 12 }}>
-          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>
-            {tr?.howWeCalculate || 'How we calculate this'}
-          </div>
-          {(tr?.healthFactors || ['UV Index', 'Air Quality', 'Dewpoint / Humidity', 'Wind']).map((label, i) => {
-            const factors = [
-              { weight: '25%', value: uvFactor,   color: rcUv   },
-              { weight: '40%', value: aqiFactor,  color: rcAqi  },
-              { weight: '20%', value: dewFactor,  color: rcDew  },
-              { weight: '15%', value: windFactor, color: rcWind },
-            ]
-            const f = { label, ...factors[i] }
-            return (
-              <div key={f.label} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{f.label}</span>
-                  <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{f.weight}</span>
-                </div>
-                <ProgressBar value={f.value} max={100} color={f.color} />
-              </div>
-            )
-          })}
-          <button
-            onClick={() => setExpanded(false)}
-            style={{
-              marginTop: 8, background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12,
-              color: 'rgba(255,255,255,0.45)', padding: 0, minHeight: 36,
-              display: 'flex', alignItems: 'center',
-            }}
-          >
-            {tr?.hideBreakdown || 'Hide breakdown'}
-          </button>
+      {/* Breakdown — always visible */}
+      <div style={{ paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>
+          {tr?.howWeCalculate || 'How we calculate this'}
         </div>
+        {(tr?.healthFactors || ['UV Index', 'Air Quality', 'Dewpoint / Humidity', 'Wind']).map((label, i) => {
+          const f = { label, ...factors[i] }
+          return (
+            <div key={f.label} style={{ marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{f.label}</span>
+                <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{f.weight}</span>
+              </div>
+              <ProgressBar value={f.value} max={100} color={f.color} />
+            </div>
+          )
+        })}
       </div>
     </Glass>
   )

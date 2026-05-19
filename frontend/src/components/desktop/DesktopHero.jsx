@@ -55,7 +55,7 @@ export default function DesktopHero({
   const lastUpd = relativeTime(data.fetchedAt, tr)
 
   return (
-    <div style={{ padding: '28px 28px 0' }}>
+    <div>
       {/* Location header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
@@ -125,7 +125,7 @@ export default function DesktopHero({
       </div>
 
       {/* Main hero card */}
-      <Glass style={{ padding: '24px 28px', marginBottom: 16 }}>
+      <Glass style={{ padding: '24px 28px', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Temp block */}
           <div>

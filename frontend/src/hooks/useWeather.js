@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_URL || ''
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
 const STALE_MS = 15 * 60 * 1000 // 15 minutes
 
 // Simple localStorage cache

@@ -34,7 +34,7 @@ export function useGeolocation() {
         else setStatus('error')
         setCity('Lisbon') // fallback
       },
-      { timeout: 8000, maximumAge: 300000 }
+      { timeout: 4000, maximumAge: 300000 }
     )
   }, [])
 

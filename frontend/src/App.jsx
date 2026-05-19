@@ -20,11 +20,12 @@ export default function App() {
   // Geolocation
   const { city: geoCity, status: geoStatus } = useGeolocation()
 
-  // Active city: search overrides geolocation
+  // Active city: search > geo > default to Lisbon immediately so we never
+  // block the weather fetch waiting for a slow mobile GPS lock
   const activeCity =
     searchCity ||
     geoCity ||
-    (geoStatus === 'denied' || geoStatus === 'error' ? 'Lisbon' : null)
+    'Lisbon'
 
   const { data, isLoading, error, isStale, refetch } = useWeather(activeCity)
 

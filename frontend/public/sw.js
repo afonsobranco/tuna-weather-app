@@ -1,19 +1,13 @@
 /**
- * Tuna Weather App — Service Worker
- * Strategy:
- *  - App shell (HTML/JS/CSS): Cache-first, update in background (StaleWhileRevalidate)
- *  - API calls: Network-first with offline fallback to last cache
- *  - Images/fonts: Cache-first with long TTL
+ * Tuna Weather App — Service Worker v2
+ * Bumped to v2 to force-evict the old cached JS bundle on all installed PWAs.
  */
 
-const CACHE_NAME = 'tuna-v1'
-const SHELL_CACHE = 'tuna-shell-v1'
-const API_CACHE   = 'tuna-api-v1'
+const CACHE_NAME  = 'tuna-v2'
+const SHELL_CACHE = 'tuna-shell-v2'
+const API_CACHE   = 'tuna-api-v2'
 
-const SHELL_URLS = [
-  '/',
-  '/index.html',
-]
+const SHELL_URLS = ['/', '/index.html']
 
 // ── Install: pre-cache app shell ─────────────────────────────────────────────
 self.addEventListener('install', (event) => {
@@ -25,18 +19,25 @@ self.addEventListener('install', (event) => {
   self.skipWaiting()
 })
 
-// ── Activate: clean up old caches ────────────────────────────────────────────
+// ── Activate: delete ALL old caches, then reload open clients ────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => ![CACHE_NAME, SHELL_CACHE, API_CACHE].includes(k))
-          .map((k) => caches.delete(k))
+    caches.keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((k) => ![CACHE_NAME, SHELL_CACHE, API_CACHE].includes(k))
+            .map((k) => caches.delete(k))
+        )
       )
-    )
+      .then(() => self.clients.claim())
+      .then(() => {
+        // Tell every open tab/PWA window to reload so it picks up fresh JS
+        return self.clients.matchAll({ type: 'window' }).then((clients) => {
+          clients.forEach((client) => client.navigate(client.url))
+        })
+      })
   )
-  self.clients.claim()
 })
 
 // ── Fetch: routing strategy ───────────────────────────────────────────────────
@@ -44,25 +45,25 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Skip non-GET and chrome-extension
   if (request.method !== 'GET') return
   if (!url.protocol.startsWith('http')) return
 
-  // API requests: Network-first with stale fallback
-  if (url.hostname.includes('onrender.com') || url.pathname.includes('/weather')) {
+  // API: network-first so data is always fresh, stale fallback for offline
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('onrender.com')) {
     event.respondWith(networkFirstWithFallback(request, API_CACHE))
     return
   }
 
-  // Google Fonts: Cache-first
+  // Fonts: cache-first (rarely changes)
   if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
     event.respondWith(cacheFirst(request, CACHE_NAME))
     return
   }
 
-  // App shell: StaleWhileRevalidate
+  // App shell: network-first so the latest JS bundle is always served
+  // Falls back to cache only when truly offline
   if (url.origin === self.location.origin) {
-    event.respondWith(staleWhileRevalidate(request, SHELL_CACHE))
+    event.respondWith(networkFirstWithFallback(request, SHELL_CACHE))
     return
   }
 })
@@ -72,17 +73,15 @@ async function networkFirstWithFallback(request, cacheName) {
   const cache = await caches.open(cacheName)
   try {
     const response = await fetch(request)
-    if (response.ok) {
-      cache.put(request, response.clone())
-    }
+    if (response.ok) cache.put(request, response.clone())
     return response
   } catch {
     const cached = await cache.match(request)
     if (cached) return cached
-    return new Response(JSON.stringify({ error: 'offline', detail: 'No cached data available.' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ error: 'offline', detail: 'No cached data available.' }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 }
 
@@ -93,14 +92,4 @@ async function cacheFirst(request, cacheName) {
   const response = await fetch(request)
   if (response.ok) cache.put(request, response.clone())
   return response
-}
-
-async function staleWhileRevalidate(request, cacheName) {
-  const cache = await caches.open(cacheName)
-  const cached = await cache.match(request)
-  const networkPromise = fetch(request).then((response) => {
-    if (response.ok) cache.put(request, response.clone())
-    return response
-  }).catch(() => null)
-  return cached || (await networkPromise) || new Response('Offline', { status: 503 })
 }

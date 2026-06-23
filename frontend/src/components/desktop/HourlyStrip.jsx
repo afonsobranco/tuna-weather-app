@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { T } from '../../utils/unitUtils'
@@ -10,6 +11,10 @@ function formatHour(timeStr) {
 }
 
 export default function HourlyStrip({ hourly: hourlyProp, data, unit, tr }) {
+  const uid = useId().replace(/:/g, '')
+  const areaId = `sparkArea-${uid}`
+  const lineId  = `sparkLine-${uid}`
+
   const hourly = hourlyProp || data?.hourly || []
   if (!hourly.length) return null
 
@@ -56,20 +61,20 @@ export default function HourlyStrip({ hourly: hourlyProp, data, unit, tr }) {
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible' }}
         >
           <defs>
-            <linearGradient id="sparkArea" x1="0" x2="0" y1="0" y2="1">
+            <linearGradient id={areaId} x1="0" x2="0" y1="0" y2="1">
               <stop offset="0" stopColor="#FFD18A" stopOpacity="0.55" />
               <stop offset="0.6" stopColor="#FFD18A" stopOpacity="0.10" />
               <stop offset="1" stopColor="#FFD18A" stopOpacity="0" />
             </linearGradient>
-            <linearGradient id="sparkLine" x1="0" x2="1" y1="0" y2="0">
+            <linearGradient id={lineId} x1="0" x2="1" y1="0" y2="0">
               <stop offset="0" stopColor="#9DCDF2" />
               <stop offset="0.5" stopColor="#FFD18A" />
               <stop offset="1" stopColor="#F4825F" />
             </linearGradient>
           </defs>
-          <path d={areaPath} fill="url(#sparkArea)" />
+          <path d={areaPath} fill={`url(#${areaId})`} />
           <path
-            d={path} fill="none" stroke="url(#sparkLine)"
+            d={path} fill="none" stroke={`url(#${lineId})`}
             strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
           />

@@ -6,6 +6,7 @@ import HealthDashboard from '../mobile/HealthDashboard'
 import Astronomy from '../mobile/Astronomy'
 import OnThisDay from '../mobile/OnThisDay'
 import Forecast from '../mobile/Forecast'
+import HourlyStrip from '../desktop/HourlyStrip'
 import SkeletonLoader from '../states/SkeletonLoader'
 import EmptyState from '../states/EmptyStates'
 
@@ -97,6 +98,9 @@ export default function MobileLayout({
               addSavedCity={addSavedCity}
             />
             <Hero data={data} unit={unit} tr={tr} weatherState={weatherState} />
+            <div style={{ padding: '0 16px 12px' }}>
+              <HourlyStrip data={data} unit={unit} tr={tr} />
+            </div>
             <TomorrowTile data={data} unit={unit} tr={tr} />
             <HealthDashboard data={data} tr={tr} />
             <Astronomy data={data} tr={tr} />

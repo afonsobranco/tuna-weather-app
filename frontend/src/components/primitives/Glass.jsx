@@ -6,7 +6,6 @@ export default function Glass({ children, style = {}, antique = false, accent, c
       style={{
         position: 'relative',
         borderRadius: 24,
-        overflow: 'hidden',
         background: antique
           ? 'linear-gradient(155deg, rgba(240,225,190,0.22) 0%, rgba(200,170,120,0.16) 100%)'
           : 'rgba(255,255,255,0.10)',

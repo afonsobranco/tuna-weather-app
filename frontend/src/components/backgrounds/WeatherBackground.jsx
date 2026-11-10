@@ -266,14 +266,14 @@ function BgClearNight() {
           }}
         />
       ))}
-      {/* Moon */}
+      {/* Moon — kept above the header row so it never sits behind text */}
       <div
         style={{
           position: 'absolute',
           right: '12%',
-          top: '14%',
-          width: 52,
-          height: 52,
+          top: 10,
+          width: 40,
+          height: 40,
           borderRadius: '50%',
           background:
             'radial-gradient(circle at 40% 40%, #f5f0e0 0%, #ede5c0 40%, #d4c890 100%)',

@@ -129,6 +129,25 @@ export function IconMoonCloud({ size = 28 }) {
   )
 }
 
+export function IconSnow({ size = 28 }) {
+  const flakes = [[11, 25], [16, 28], [21, 25]]
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <path
+        d="M8 19h16.5a4.5 4.5 0 0 0 .9-8.9 6.5 6.5 0 0 0-12.7-1.5A5 5 0 0 0 8 19z"
+        fill="#DCE4F2"
+      />
+      {flakes.map(([cx, cy]) => (
+        <g key={`${cx}-${cy}`} stroke="#F4F8FF" strokeWidth="1.3" strokeLinecap="round">
+          <line x1={cx - 2} y1={cy} x2={cx + 2} y2={cy} />
+          <line x1={cx - 1} y1={cy - 1.7} x2={cx + 1} y2={cy + 1.7} />
+          <line x1={cx - 1} y1={cy + 1.7} x2={cx + 1} y2={cy - 1.7} />
+        </g>
+      ))}
+    </svg>
+  )
+}
+
 export function ForecastIcon({ kind, size = 30 }) {
   switch (kind) {
     case 'sun': return <IconSun size={size} />
@@ -136,6 +155,7 @@ export function ForecastIcon({ kind, size = 30 }) {
     case 'cloud': return <IconCloud size={size} />
     case 'rain': return <IconRain size={size} />
     case 'storm': return <IconStorm size={size} />
+    case 'snow': return <IconSnow size={size} />
     case 'moon': return <IconMoon size={size} />
     case 'mooncloud': return <IconMoonCloud size={size} />
     default: return <IconPartlyCloudy size={size} />

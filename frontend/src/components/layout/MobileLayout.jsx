@@ -25,7 +25,8 @@ export default function MobileLayout({
   onSearch,
   onLanguageChange,
   onRefetch,
-  addSavedCity,
+  searchStatus,
+  onClearSearchStatus,
 }) {
   // Determine which state to show
   const showSkeleton = isLoading && !data
@@ -82,7 +83,7 @@ export default function MobileLayout({
             color: 'rgba(255,200,120,0.95)', fontSize: 11, fontWeight: 600,
             letterSpacing: 0.5,
           }}>
-            ↻ Refreshing data…
+            ↻ {tr.refreshing}
           </div>
         )}
 
@@ -96,7 +97,8 @@ export default function MobileLayout({
               onToggleUnit={onToggleUnit}
               onSearch={onSearch}
               onLanguageChange={onLanguageChange}
-              addSavedCity={addSavedCity}
+              searchStatus={searchStatus}
+              onClearSearchStatus={onClearSearchStatus}
             />
             <Hero data={data} unit={unit} tr={tr} weatherState={weatherState} />
             {data.alerts?.length > 0 && (
@@ -108,7 +110,7 @@ export default function MobileLayout({
             <TomorrowTile data={data} unit={unit} tr={tr} />
             <HealthDashboard data={data} tr={tr} />
             <Astronomy data={data} tr={tr} />
-            <OnThisDay data={data} tr={tr} />
+            <OnThisDay data={data} tr={tr} language={language} />
             <Forecast data={data} unit={unit} tr={tr} />
             <div style={{ height: 18 }} />
           </>

@@ -2,6 +2,7 @@ import { useId } from 'react'
 import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { T } from '../../utils/unitUtils'
+import { translateDay } from '../../utils/i18nUtils'
 
 function formatHour(timeStr) {
   if (!timeStr) return '—'
@@ -9,21 +10,22 @@ function formatHour(timeStr) {
   return t ? t.slice(0, 5) : '—'
 }
 
-export default function HourlyStrip({ hourly: hourlyProp, data, unit, tr }) {
+export default function HourlyStrip({ hourly: hourlyProp, dayLabel, unit, tr }) {
   const uid    = useId().replace(/:/g, '')
   const areaId = `sparkArea-${uid}`
   const lineId = `sparkLine-${uid}`
 
-  const hourly = hourlyProp || data?.hourly || []
+  const hourly = hourlyProp || []
   if (!hourly.length) return null
 
   // SVG dimensions — no overflow needed, labels are in a separate HTML row
   const W = 1000, H = 56
   const padX = W / hourly.length / 2
   const temps = hourly.map(h => h.tempC)
-  const minT  = Math.min(...temps)
-  const maxT  = Math.max(...temps)
-  const range = maxT - minT || 1
+  // A minimum 6° span keeps a 1° change from being drawn as a cliff
+  const mid   = (Math.min(...temps) + Math.max(...temps)) / 2
+  const range = Math.max(Math.max(...temps) - Math.min(...temps), 6)
+  const minT  = mid - range / 2
 
   const pts = hourly.map((h, i) => ({
     x: padX + (i / (hourly.length - 1)) * (W - padX * 2),
@@ -50,7 +52,7 @@ export default function HourlyStrip({ hourly: hourlyProp, data, unit, tr }) {
           {tr?.hourlyForecast || 'Hourly Forecast'}
         </div>
         <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
-          {tr?.next24h || 'next 24h'}
+          {dayLabel ? translateDay(dayLabel, tr) : tr.next24h}
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { GExternal, GDrop } from '../icons/UIGlyphs'
 import { T } from '../../utils/unitUtils'
+import { translateDay } from '../../utils/i18nUtils'
 
 // Parchment grain overlay
 function ParchmentGrain() {
@@ -18,18 +19,11 @@ function ParchmentGrain() {
   )
 }
 
-export default function DesktopAside({ data, unit, tr, language, selectedDayIdx = 0, onDaySelect }) {
+export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDaySelect, forecastRef, historyRef }) {
   if (!data) return null
 
-  const locale = tr?.dateLocale || 'en'
-  const today = new Date()
-  const dateLabel = `${today.getDate()} ${today.toLocaleDateString(locale, { month: 'short' })}`
-
-  const translateDay = (d) => {
-    if (d === 'Today')    return tr?.today    || d
-    if (d === 'Tomorrow') return tr?.tomorrow || d
-    return tr?.days?.[d] || d
-  }
+  const dateLabel = new Date(`${data.localDate}T12:00:00Z`)
+    .toLocaleDateString(tr.locale, { day: 'numeric', month: 'short', timeZone: 'UTC' })
 
   // 7-day forecast range normalization
   const allHi = data.forecast.map(d => d.hi)
@@ -46,73 +40,8 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
       overflowY: 'auto',
     }} className="hide-scroll">
 
-      {/* On This Day */}
-      <Glass antique accent="rgba(220,190,140,0.4)" style={{ padding: '18px 18px 14px' }}>
-        <ParchmentGrain />
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          position: 'relative',
-        }}>
-          <div style={{
-            fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 600,
-            color: '#fff8e7', fontSize: 26, letterSpacing: -0.3, lineHeight: 1,
-          }}>
-            {tr?.onThisDay || 'On this day'}
-          </div>
-          <span style={{
-            fontSize: 10.5, color: 'rgba(255,240,210,0.7)', fontWeight: 600,
-            letterSpacing: 1.2, textTransform: 'uppercase',
-          }}>
-            {dateLabel} · {data.city}
-          </span>
-        </div>
-
-        <div style={{ marginTop: 12, position: 'relative' }}>
-          {data.history.map((h, i) => (
-            <a
-              key={i}
-              href={h.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'grid', gridTemplateColumns: '68px 1fr', gap: 14,
-                padding: '14px 0', textDecoration: 'none',
-                borderTop: i ? '1px solid rgba(220,195,150,0.22)' : 'none',
-              }}
-            >
-              <div style={{
-                fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 300,
-                color: '#ffe7b8', fontSize: 32, letterSpacing: -0.6, lineHeight: 1, paddingTop: 2,
-              }}>
-                {h.year}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{
-                  color: '#fff8e7', fontSize: 14, fontWeight: 600,
-                  lineHeight: 1.25, letterSpacing: -0.1,
-                }}>
-                  {h.title}
-                </div>
-                <div style={{
-                  color: 'rgba(255,240,210,0.78)', fontSize: 12.5, lineHeight: 1.4,
-                  marginTop: 4,
-                }}>
-                  {h.body}
-                </div>
-                <div style={{
-                  marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 4,
-                  color: 'rgba(255,225,180,0.75)', fontSize: 10, fontWeight: 600,
-                  letterSpacing: 1, textTransform: 'uppercase',
-                }}>
-                  {tr?.wikipedia || 'Wikipedia'} <GExternal color="currentColor" />
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </Glass>
-
-      {/* 7-Day Forecast (vertical) */}
+      {/* 5-day forecast */}
+      <div ref={forecastRef} style={{ scrollMarginTop: 26 }}>
       <Glass style={{ padding: '16px 18px' }}>
         <div style={{
           color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 600,
@@ -127,9 +56,10 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
             <button
               key={i}
               onClick={() => onDaySelect?.(i)}
+              aria-pressed={i === selectedDayIdx}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '46px 24px 40px 1fr 40px',
+                gridTemplateColumns: 'minmax(64px, auto) 24px 40px 1fr 52px',
                 alignItems: 'center', gap: 10,
                 padding: '8px 6px',
                 borderRadius: 10,
@@ -140,7 +70,7 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
                 borderTop: i ? '1px solid rgba(255,255,255,0.10)' : 'none',
               }}
             >
-              <div style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>{translateDay(d.d)}</div>
+              <div style={{ color: '#fff', fontSize: 13, fontWeight: 500, textAlign: 'left', whiteSpace: 'nowrap' }}>{translateDay(d.d, tr)}</div>
               <ForecastIcon kind={d.i} size={22} />
               <div style={{
                 color: 'rgba(160,200,255,0.95)', fontSize: 11, fontWeight: 600,
@@ -169,6 +99,75 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
           )
         })}
       </Glass>
+      </div>
+
+      {/* On This Day */}
+      <div ref={historyRef} style={{ scrollMarginTop: 26 }}>
+      <Glass antique accent="rgba(220,190,140,0.4)" style={{ padding: '18px 18px 14px' }}>
+        <ParchmentGrain />
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          position: 'relative',
+        }}>
+          <div style={{
+            fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 600,
+            color: '#fff8e7', fontSize: 26, letterSpacing: -0.3, lineHeight: 1,
+          }}>
+            {tr?.onThisDay || 'On this day'}
+          </div>
+          <span style={{
+            fontSize: 10.5, color: 'rgba(255,240,210,0.7)', fontWeight: 600,
+            letterSpacing: 1.2, textTransform: 'uppercase',
+          }}>
+            {dateLabel} · {data.city}
+          </span>
+        </div>
+
+        <div style={{ marginTop: 12, position: 'relative' }}>
+          {data.history.map((h, i) => (
+            <a
+              key={i}
+              href={h.href || undefined}
+              target={h.href ? '_blank' : undefined}
+              rel="noopener noreferrer"
+              style={{
+                display: 'grid', gridTemplateColumns: '68px 1fr', gap: 14,
+                padding: '14px 0', textDecoration: 'none',
+                borderTop: i ? '1px solid rgba(220,195,150,0.22)' : 'none',
+              }}
+            >
+              <div style={{
+                fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 300,
+                color: '#ffe7b8', fontSize: 32, letterSpacing: -0.6, lineHeight: 1, paddingTop: 2,
+              }}>
+                {h.year}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{
+                  color: '#fff8e7', fontSize: 14, fontWeight: 600,
+                  lineHeight: 1.25, letterSpacing: -0.1,
+                }}>
+                  {h.title}
+                </div>
+                <div style={{
+                  color: 'rgba(255,240,210,0.78)', fontSize: 12.5, lineHeight: 1.4,
+                  marginTop: 4,
+                }}>
+                  {h.body}
+                </div>
+                {h.href && <div style={{
+                  marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 4,
+                  color: 'rgba(255,225,180,0.75)', fontSize: 10, fontWeight: 600,
+                  letterSpacing: 1, textTransform: 'uppercase',
+                }}>
+                  {tr?.wikipedia || 'Wikipedia'} <GExternal color="currentColor" />
+                </div>}
+              </div>
+            </a>
+          ))}
+        </div>
+      </Glass>
+      </div>
     </aside>
   )
 }

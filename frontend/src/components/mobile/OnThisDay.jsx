@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Glass from '../primitives/Glass'
 import { GExternal } from '../icons/UIGlyphs'
+import { API_BASE } from '../../utils/api'
 
 const GRAIN_STYLE = {
   position: 'absolute',
@@ -15,20 +16,40 @@ const GRAIN_STYLE = {
   pointerEvents: 'none',
 }
 
-export default function OnThisDay({ data, tr, onDateChange }) {
+export default function OnThisDay({ data, tr, language }) {
   const [expanded, setExpanded] = useState(false)
-  const [selectedDate, setSelectedDate] = useState('')
+  const today = data?.localDate || ''
+  const [selectedDate, setSelectedDate] = useState(today)
+  const [picked, setPicked] = useState(null) // { date, loading, history } for a non-today date
+  const requestRef = useRef(0)
 
-  const history = data?.history || []
-  if (history.length === 0) return null
+  useEffect(() => {
+    setSelectedDate(today)
+    setPicked(null)
+    requestRef.current++
+  }, [today, data?.city, language])
 
+  const handleDateChange = async (e) => {
+    const value = e.target.value
+    setSelectedDate(value)
+    setExpanded(false)
+    const id = ++requestRef.current
+    if (!value || value.slice(5) === today.slice(5)) { setPicked(null); return }
+    setPicked({ date: value, loading: true, history: [] })
+    const params = new URLSearchParams({ date: value.slice(5), city: data.city, country: data.country || '', lang: language })
+    let history = []
+    try {
+      const res = await fetch(`${API_BASE}/history?${params}`)
+      history = (await res.json()).history || []
+    } catch {}
+    if (id === requestRef.current) setPicked({ date: value, loading: false, history })
+  }
+
+  if (!data) return null
+  const history = picked ? picked.history : data.history || []
+  const loading = !!picked?.loading
   const visible = expanded ? history : history.slice(0, 1)
   const remaining = history.length - 1
-
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value)
-    if (onDateChange) onDateChange(e.target.value)
-  }
 
   return (
     <div style={{ padding: '0 16px 12px' }}>
@@ -58,12 +79,14 @@ export default function OnThisDay({ data, tr, onDateChange }) {
             type="date"
             value={selectedDate}
             onChange={handleDateChange}
+            aria-label={tr.pickDate}
             style={{
               background: 'rgba(220,190,140,0.15)',
               border: '1px solid rgba(220,190,140,0.3)',
               borderRadius: 8,
-              padding: '4px 8px',
-              color: 'rgba(255,240,200,0.8)',
+              padding: '8px 10px',
+              minHeight: 40,
+              color: 'rgba(255,240,200,0.9)',
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 11,
               cursor: 'pointer',
@@ -74,8 +97,14 @@ export default function OnThisDay({ data, tr, onDateChange }) {
         </div>
 
         {/* Events */}
-        <div style={{ position: 'relative' }}>
-          {visible.map((event, idx) => (
+        <div style={{ position: 'relative' }} aria-live="polite" aria-busy={loading}>
+          {(loading || history.length === 0) && (
+            <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 13, color: 'rgba(255,240,200,0.75)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              {loading && <span aria-hidden className="tuna-spinner" />}
+              {loading ? tr.historyLoading : tr.historyEmpty}
+            </div>
+          )}
+          {!loading && visible.map((event, idx) => (
             <div
               key={idx}
               style={{
@@ -150,9 +179,11 @@ export default function OnThisDay({ data, tr, onDateChange }) {
         </div>
 
         {/* Expand / collapse */}
-        {history.length > 1 && (
+        {!loading && history.length > 1 && (
           <button
+            type="button"
             onClick={() => setExpanded((e) => !e)}
+            aria-expanded={expanded}
             style={{
               marginTop: 12,
               background: 'rgba(220,190,140,0.12)',

@@ -11,6 +11,7 @@ export default function Tone({ tone, children }) {
         padding: '3px 9px 3px 8px',
         borderRadius: 999,
         background: t.bg,
+        border: `1px solid ${t.border}`,
         color: t.fg,
         fontWeight: 600,
         fontSize: 11.5,

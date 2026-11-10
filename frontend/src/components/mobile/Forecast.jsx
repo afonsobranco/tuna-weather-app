@@ -49,8 +49,7 @@ export default function Forecast({ data, unit, tr }) {
             <Glass
               key={idx}
               style={{
-                minWidth: 84,
-                flexShrink: 0,
+                flex: '1 0 84px',
                 padding: '12px 8px',
                 textAlign: 'center',
                 border: isToday

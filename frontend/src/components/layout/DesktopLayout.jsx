@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import WeatherBackground from '../backgrounds/WeatherBackground'
 import DesktopRail from '../desktop/DesktopRail'
 import DesktopHero from '../desktop/DesktopHero'
@@ -23,15 +23,22 @@ export default function DesktopLayout({
   onSearch,
   onLanguageChange,
   onRefetch,
-  addSavedCity,
-  cityTemps,
+  searchStatus,
+  onClearSearchStatus,
 }) {
-  const [activeCityName, setActiveCityName] = useState(null)
   const [selectedDayIdx, setSelectedDayIdx] = useState(0)
+  const [activeSection, setActiveSection] = useState('today')
+  const mainRef = useRef(null)
+  const forecastRef = useRef(null)
+  const historyRef = useRef(null)
 
-  const handleCityClick = (city) => {
-    setActiveCityName(city)
-    onSearch(city)
+  // A new place starts on today's hourly strip
+  useEffect(() => { setSelectedDayIdx(0) }, [data?.lat, data?.lon])
+
+  const handleNavigate = (key) => {
+    setActiveSection(key)
+    if (key === 'today') mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    else (key === 'forecast' ? forecastRef : historyRef).current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const showSkeleton  = isLoading && !data
@@ -52,13 +59,14 @@ export default function DesktopLayout({
     return <EmptyState variant="offline" tr={tr} onCta={onRefetch} />
   }
 
+  const selectedDay = data?.forecast?.[selectedDayIdx]
+
   return (
     <div style={{
       position: 'relative', width: '100%', height: '100%',
       overflow: 'hidden', color: '#fff',
       fontFamily: '"Geist", system-ui, -apple-system, sans-serif',
     }}>
-      {/* Background */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <WeatherBackground state={weatherState} />
       </div>
@@ -67,24 +75,24 @@ export default function DesktopLayout({
         background: 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 30%, rgba(0,0,0,0.18) 100%)',
       }} />
 
-      {/* 3-column layout */}
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', height: '100%' }}>
         <DesktopRail
           data={data}
           unit={unit}
           language={language}
           tr={tr}
-          onCity={handleCityClick}
+          onCity={onSearch}
           onSearch={onSearch}
           onToggleUnit={onToggleUnit}
           onLanguageChange={onLanguageChange}
-          activeCityName={activeCityName || data?.city}
-          addSavedCity={addSavedCity}
-          cityTemps={cityTemps}
+          searchStatus={searchStatus}
+          onClearSearchStatus={onClearSearchStatus}
+          activeSection={activeSection}
+          onNavigate={handleNavigate}
         />
 
-        {/* Center: hero + hourly */}
         <main
+          ref={mainRef}
           className="hide-scroll"
           style={{
             flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column',
@@ -98,7 +106,7 @@ export default function DesktopLayout({
               color: 'rgba(255,200,120,0.95)', fontSize: 11, fontWeight: 600,
               alignSelf: 'flex-start',
             }}>
-              ↻ Refreshing data…
+              ↻ {tr.refreshing}
             </div>
           )}
 
@@ -114,12 +122,12 @@ export default function DesktopLayout({
                 isStale={isStale}
               />
               <HourlyStrip
-                hourly={data.forecast?.[selectedDayIdx]?.hourly || data.hourly}
-                data={data}
+                hourly={selectedDayIdx === 0 ? data.hourly : selectedDay?.hourly}
+                dayLabel={selectedDayIdx === 0 ? null : selectedDay?.d}
                 unit={unit}
                 tr={tr}
               />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
                 <Astronomy data={data} tr={tr} noPadding />
                 <DesktopHealthScore data={data} tr={tr} />
               </div>
@@ -135,6 +143,8 @@ export default function DesktopLayout({
             language={language}
             selectedDayIdx={selectedDayIdx}
             onDaySelect={setSelectedDayIdx}
+            forecastRef={forecastRef}
+            historyRef={historyRef}
           />
         )}
       </div>

@@ -1,18 +1,14 @@
 import Glass from '../primitives/Glass'
 import Tone from '../primitives/Tone'
 import WeatherAlerts from '../alerts/WeatherAlerts'
-import { ForecastIcon, IconRain, IconMoon, IconSun, IconPartlyCloudy } from '../icons/WeatherIcons'
+import UnitToggle from '../primitives/UnitToggle'
+import Flag from '../primitives/Flag'
+import { countryName } from '../../utils/i18nUtils'
+import { ForecastIcon } from '../icons/WeatherIcons'
+import { heroIconKind } from '../../utils/weatherUtils'
 import { GLeaf, GUV, GDrop } from '../icons/UIGlyphs'
 import { T, relativeTime } from '../../utils/unitUtils'
 
-function HeroIcon({ weatherState, size = 180 }) {
-  switch (weatherState) {
-    case 'rainy': return <IconRain size={size} />
-    case 'clear-night': return <IconMoon size={size} />
-    case 'clear-day': return <IconSun size={size} />
-    default: return <IconPartlyCloudy size={size} />
-  }
-}
 
 function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone }) {
   return (
@@ -61,7 +57,7 @@ export default function DesktopHero({
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-            {data.flag} {data.country}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)}</span>
           </div>
           <h1
             style={{
@@ -83,31 +79,14 @@ export default function DesktopHero({
 
         {/* Controls */}
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          {/* Unit toggle */}
-          <button
-            onClick={onToggleUnit}
-            style={{
-              width: 68,
-              height: 34,
-              borderRadius: 999,
-              background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.18)',
-              cursor: 'pointer',
-              position: 'relative',
-              padding: 0,
-            }}
-          >
-            <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 600, color: unit === 'C' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.85)', fontFamily: '"Geist", system-ui, sans-serif', pointerEvents: 'none' }}>°F</span>
-            <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 600, color: unit === 'C' ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', fontFamily: '"Geist", system-ui, sans-serif', pointerEvents: 'none' }}>°C</span>
-            <span style={{ position: 'absolute', top: 4, left: unit === 'C' ? 33 : 4, width: 26, height: 26, borderRadius: 999, background: 'rgba(255,255,255,0.95)', transition: 'left 250ms cubic-bezier(.4,1.2,.5,1)' }} />
-          </button>
+          <UnitToggle unit={unit} onToggle={onToggleUnit} tr={tr} height={40} />
 
           {/* Refresh */}
           <button
             onClick={() => onRefetch(true)}
             style={{
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               borderRadius: 999,
               background: 'rgba(255,255,255,0.08)',
               border: '1px solid rgba(255,255,255,0.15)',
@@ -118,7 +97,8 @@ export default function DesktopHero({
               color: 'rgba(255,255,255,0.6)',
               fontSize: 16,
             }}
-            aria-label="Refresh"
+            aria-label={tr.refresh}
+            title={tr.refresh}
           >
             ↻
           </button>
@@ -170,7 +150,7 @@ export default function DesktopHero({
 
           {/* Weather icon */}
           <div style={{ flexShrink: 0, paddingRight: 16 }}>
-            <HeroIcon weatherState={weatherState} size={180} />
+            <ForecastIcon kind={heroIconKind(data)} size={180} />
           </div>
         </div>
       </Glass>

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import en from '../i18n/en'
 import pt from '../i18n/pt'
+import { SEED_PLACES, placeKey, samePlace, toPlace } from '../utils/place'
 
 const LANGS = { en, pt }
 
@@ -10,39 +11,48 @@ export const useAppStore = create(
     (set, get) => ({
       unit: 'C',
       language: 'en',
-      savedCities: ['Lisbon', 'London', 'Reykjavík', 'Tokyo'],
-      lastCity: null,      // persisted last viewed city
-      cityTemps: {},       // { cityName: tempC } — last known temp per city
-      cityLocations: {},   // { cityName: { lat, lon, country, cc } } — exact place the user picked
+      savedCities: Object.values(SEED_PLACES), // places, see utils/place.js
+      lastCity: null,                           // last place viewed
+      cityTemps: {},                            // { placeKey: tempC }
 
       toggleUnit: () => set((s) => ({ unit: s.unit === 'C' ? 'F' : 'C' })),
       setLanguage: (lang) => set({ language: lang }),
-      setLastCity: (city) => set({ lastCity: city }),
-      setCityTemp: (city, tempC) => set((s) => ({
-        cityTemps: { ...s.cityTemps, [city]: tempC },
+      setLastCity: (place) => set({ lastCity: place }),
+      setCityTemp: (place, tempC) => set((s) => ({
+        cityTemps: { ...s.cityTemps, [placeKey(place)]: tempC },
       })),
-      setCityLocation: (city, loc) => set((s) => ({
-        cityLocations: { ...s.cityLocations, [city]: loc },
-      })),
-      addSavedCity: (city) => set((s) => ({
-        savedCities: s.savedCities.includes(city)
+      addSavedCity: (place) => set((s) => ({
+        savedCities: s.savedCities.some((p) => samePlace(p, place))
           ? s.savedCities
-          : [...s.savedCities, city].slice(-8),
+          : [...s.savedCities, place].slice(-8),
       })),
-      removeSavedCity: (city) => set((s) => ({
-        savedCities: s.savedCities.filter((c) => c !== city),
+      removeSavedCity: (place) => set((s) => ({
+        savedCities: s.savedCities.filter((p) => !samePlace(p, place)),
+      })),
+      // Swap a name-only saved entry for the exact place the API resolved it to
+      upgradeSavedCity: (from, to) => set((s) => ({
+        savedCities: s.savedCities.map((p) => (p === from || samePlace(p, from) ? to : p)),
       })),
       t: () => LANGS[get().language] || LANGS.en,
     }),
     {
       name: 'tuna-app-store',
+      version: 1,
+      migrate: (state, version) => {
+        if (version < 1) {
+          state.savedCities = (state.savedCities || []).map(toPlace).filter(Boolean)
+          state.lastCity = toPlace(state.lastCity)
+          state.cityTemps = {}
+          delete state.cityLocations
+        }
+        return state
+      },
       partialize: (state) => ({
         unit: state.unit,
         language: state.language,
         savedCities: state.savedCities,
         lastCity: state.lastCity,
         cityTemps: state.cityTemps,
-        cityLocations: state.cityLocations,
       }),
     }
   )

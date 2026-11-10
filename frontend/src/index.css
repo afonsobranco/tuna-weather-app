@@ -101,3 +101,26 @@ body {
   opacity: 0.3;
   mix-blend-mode: overlay;
 }
+
+@keyframes tunaSpin {
+  to { transform: rotate(360deg); }
+}
+
+.tuna-spinner {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  animation: tunaSpin 0.8s linear infinite;
+}
+
+:focus-visible {
+  outline: 2px solid #FFD45A;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tuna-spinner { animation-duration: 2.4s; }
+}

@@ -1,16 +1,8 @@
 import { T } from '../../utils/unitUtils'
-import { IconRain, IconMoon, IconPartlyCloudy, IconSun } from '../icons/WeatherIcons'
+import { ForecastIcon } from '../icons/WeatherIcons'
+import { heroIconKind } from '../../utils/weatherUtils'
 
-function HeroIcon({ weatherState, size = 104 }) {
-  switch (weatherState) {
-    case 'rainy': return <IconRain size={size} />
-    case 'clear-night': return <IconMoon size={size} />
-    case 'clear-day': return <IconSun size={size} />
-    default: return <IconPartlyCloudy size={size} />
-  }
-}
-
-export default function Hero({ data, unit, tr, weatherState }) {
+export default function Hero({ data, unit, tr }) {
   if (!data) return null
 
   const temp = T(data.tempC, unit)
@@ -85,7 +77,7 @@ export default function Hero({ data, unit, tr, weatherState }) {
 
       {/* Right: Weather icon */}
       <div style={{ paddingTop: 8, flexShrink: 0 }}>
-        <HeroIcon weatherState={weatherState} size={104} />
+        <ForecastIcon kind={heroIconKind(data)} size={104} />
       </div>
     </div>
   )

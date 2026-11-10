@@ -1,17 +1,15 @@
 /**
- * Tuna Weather App — Vercel Serverless Function (Node.js)
- * Node 18+ runtime: built-in fetch, no dependencies needed.
- * Cold start: ~50ms vs ~25s for Python runtime.
+ * Tuna Weather App — Vercel Serverless Function (Node.js 18+, no dependencies).
+ * All "now"/"today" logic uses the city's local clock as reported by Open-Meteo,
+ * never the server's UTC clock.
  */
+import { fetchJson, withTimeout, UA } from './_lib/http.js'
+import { getHistory } from './_lib/history.js'
 
-// ─── External API URLs ───────────────────────────────────────────────────────
 const NOMINATIM_URL   = 'https://nominatim.openstreetmap.org/search'
 const OPEN_METEO_URL  = 'https://api.open-meteo.com/v1/forecast'
 const AIR_QUALITY_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality'
 const GEOCODE_URL     = 'https://geocoding-api.open-meteo.com/v1/search'
-const WIKIMEDIA_URL   = 'https://en.wikipedia.org/api/rest_v1/feed/onthisday/events'
-
-const UA = 'TunaWeatherApp/1.0 (github.com/afonsobranco/tuna-weather-app)'
 
 // ─── WMO weather code map ────────────────────────────────────────────────────
 const WMO_MAP = {
@@ -21,9 +19,9 @@ const WMO_MAP = {
   56: ['Freezing Drizzle', 'rain'], 57: ['Freezing Drizzle', 'rain'],
   61: ['Light Rain', 'rain'], 63: ['Rain', 'rain'], 65: ['Heavy Rain', 'rain'],
   66: ['Freezing Rain', 'rain'], 67: ['Freezing Rain', 'rain'],
-  71: ['Light Snow', 'cloud'], 73: ['Snow', 'cloud'], 75: ['Heavy Snow', 'cloud'],
-  77: ['Snow Grains', 'cloud'], 80: ['Rain Showers', 'rain'], 81: ['Rain Showers', 'rain'],
-  82: ['Heavy Showers', 'rain'], 85: ['Snow Showers', 'cloud'], 86: ['Heavy Snow Showers', 'cloud'],
+  71: ['Light Snow', 'snow'], 73: ['Snow', 'snow'], 75: ['Heavy Snow', 'snow'],
+  77: ['Snow Grains', 'snow'], 80: ['Rain Showers', 'rain'], 81: ['Rain Showers', 'rain'],
+  82: ['Heavy Showers', 'rain'], 85: ['Snow Showers', 'snow'], 86: ['Heavy Snow Showers', 'snow'],
   95: ['Thunderstorm', 'storm'], 96: ['Thunderstorm', 'storm'], 99: ['Thunderstorm', 'storm'],
 }
 
@@ -64,100 +62,118 @@ function aqiLabel(val) {
 }
 
 // ─── Health score ─────────────────────────────────────────────────────────────
-function healthScore(uv, aqi, humidity, wind) {
-  const uvS   = Math.max(0, 100 - uv * 9)
-  const aqiS  = Math.max(0, 100 - aqi * 0.6)
-  const humS  = Math.max(0, 100 - (Math.abs(humidity - 57.5) / 57.5) * 80)
-  const windS = Math.max(0, 100 - (Math.abs(wind - 15) / 40) * 60)
-  const score = Math.round(uvS * 0.25 + aqiS * 0.40 + humS * 0.20 + windS * 0.15)
+const HEALTH_TIPS_EN = {
+  alertRed:      'Red weather warning in effect. Stay indoors and follow official advice.',
+  alertOrange:   'Weather warning in effect. Avoid unnecessary trips outside.',
+  storm:         'Thunderstorms around. Stay indoors and avoid open spaces.',
+  snow:          'Snow and ice likely. Dress warmly and watch your footing.',
+  rain:          'Wet day ahead. Take a rain jacket and plan indoor activities.',
+  perfect:       'Perfect outdoor conditions. Great day for activities.',
+  goodSunscreen: 'Good day outside. Apply sunscreen around midday.',
+  good:          'Good conditions outside. Enjoy some fresh air.',
+  aqiModerate:   'Moderate air quality. Sensitive groups should limit outdoor time.',
+  uvHigh:        'High UV. Stay in the shade during midday hours.',
+  ok:            'Acceptable conditions. Stay hydrated.',
+  aqiPoor:       'Poor air quality. Wear an N95 if outdoors; open windows briefly.',
+  challenging:   'Challenging conditions. Limit strenuous outdoor activity.',
+  avoid:         'Avoid prolonged outdoor exposure today.',
+}
+
+const clamp100 = (v) => Math.max(0, Math.min(100, v))
+
+function healthScore({ uv, aqi, humidity, wind, code, precip, isDay, alertLevel }) {
+  const factors = [
+    { key: 'uv',       weight: 25, score: clamp100(100 - uv * 9) },
+    { key: 'aqi',      weight: 40, score: clamp100(100 - aqi * 0.6) },
+    { key: 'humidity', weight: 20, score: clamp100(100 - (Math.abs(humidity - 57.5) / 57.5) * 80) },
+    { key: 'wind',     weight: 15, score: clamp100(100 - (Math.abs(wind - 15) / 40) * 60) },
+  ].map(f => ({ ...f, score: Math.round(f.score) }))
+  const base = Math.round(factors.reduce((s, f) => s + f.score * f.weight / 100, 0))
+
+  const [, kind] = wmoCondition(code)
+  let weather = null, penalty = 0
+  if (kind === 'storm')                                  { weather = 'storm'; penalty = 30 }
+  else if (kind === 'snow')                              { weather = 'snow';  penalty = 20 }
+  else if ([65, 67, 82].includes(code) || (kind === 'rain' && precip >= 80)) { weather = 'rain'; penalty = 20 }
+  else if (kind === 'rain' || precip >= 60)              { weather = 'rain';  penalty = 10 }
+
+  let score = Math.max(0, base - penalty)
+  if (alertLevel === 'red')    score = Math.min(score, 30)
+  if (alertLevel === 'orange') score = Math.min(score, 50)
 
   const [, aqiTone] = aqiLabel(aqi)
   const [, uvTone]  = uvLabel(uv)
-  let tip
-  if (score >= 85)      tip = 'Perfect outdoor conditions. Great day for activities.'
-  else if (score >= 70) tip = 'Good day outside. Apply sunscreen if UV is elevated.'
+  let tipKey
+  if (alertLevel === 'red')          tipKey = 'alertRed'
+  else if (alertLevel === 'orange')  tipKey = 'alertOrange'
+  else if (weather)                  tipKey = weather
+  else if (score >= 85)              tipKey = 'perfect'
+  else if (score >= 70)              tipKey = isDay && uv >= 3 ? 'goodSunscreen' : 'good'
   else if (score >= 55) {
-    if (aqiTone === 'red')                 tip = 'Moderate air quality — sensitive groups should limit outdoor time.'
-    else if (['orange','red'].includes(uvTone)) tip = 'High UV — stay in the shade during midday hours.'
-    else                                   tip = 'Acceptable conditions. Stay hydrated.'
-  } else if (score >= 40) {
-    tip = aqiTone === 'red'
-      ? 'Poor air quality. Wear an N95 if outdoors; open windows briefly.'
-      : 'Challenging conditions. Limit strenuous outdoor activity.'
-  } else {
-    tip = 'Avoid prolonged outdoor exposure today. Check air quality alerts.'
+    if (aqiTone === 'red')                                tipKey = 'aqiModerate'
+    else if (isDay && ['orange', 'red'].includes(uvTone)) tipKey = 'uvHigh'
+    else                                                  tipKey = 'ok'
   }
-  return { score, tip }
+  else if (score >= 40)              tipKey = aqiTone === 'red' ? 'aqiPoor' : 'challenging'
+  else                               tipKey = 'avoid'
+
+  return { score, tipKey, tip: HEALTH_TIPS_EN[tipKey], factors, penalty: base - score }
 }
 
 // ─── Misc helpers ─────────────────────────────────────────────────────────────
 function countryFlag(code) {
-  try { return [...code.toUpperCase()].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('') }
-  catch { return '🌍' }
+  if (!/^[A-Z]{2}$/.test(code || '')) return '🌍'
+  return [...code].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('')
 }
 
 function formatTime(iso) {
-  if (!iso) return '—'
-  const t = iso.split('T')[1]
+  const t = iso?.split('T')[1]
   return t ? t.slice(0, 5) : '—'
 }
 
-function daylightRemaining(sunriseIso, sunsetIso) {
-  try {
-    const sr = new Date(sunriseIso), ss = new Date(sunsetIso)
-    const mins = Math.max(0, Math.round((ss - sr) / 60000))
-    return `${Math.floor(mins / 60)}h ${mins % 60}m`
-  } catch { return '—' }
+// Open-Meteo returns wall-clock strings ("2026-11-10T21:30") in the city's timezone.
+// Parsing them all as UTC keeps differences between them correct.
+function localMs(s) {
+  return s ? Date.parse(`${s.length === 16 ? `${s}:00` : s}Z`) : NaN
 }
 
 function windDir(deg) {
   return ['N','NE','E','SE','S','SW','W','NW'][Math.round(deg / 45) % 8]
 }
 
-const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 function dayLabel(dateStr, i) {
   if (i === 0) return 'Today'
   if (i === 1) return 'Tomorrow'
-  try { return DAYS[new Date(dateStr).getDay() === 0 ? 6 : new Date(dateStr).getDay() - 1] }
-  catch { return DAYS[i % 7] }
+  return DAYS[new Date(`${dateStr}T12:00:00Z`).getUTCDay()]
 }
 
-// ─── Fetch with timeout ───────────────────────────────────────────────────────
-async function fetchWithTimeout(url, opts = {}, ms = 8000) {
-  const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), ms)
-  try {
-    const res = await fetch(url, { ...opts, signal: ctrl.signal })
-    clearTimeout(timer)
-    return res
-  } catch (e) {
-    clearTimeout(timer)
-    throw e
-  }
+function normalize(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
 // ─── API calls ────────────────────────────────────────────────────────────────
 // Names arrive in the app's languages ("Lisboa" vs "Lisbon"); searching only in English
-// turns "Lisboa" into a village in Mozambique. Take each language's top hit, keep the larger.
-async function geocodeCity(city) {
-  const search = (lang) =>
-    fetchWithTimeout(`${GEOCODE_URL}?name=${encodeURIComponent(city)}&count=1&language=${lang}&format=json`, {}, 6000)
-      .then(r => r.json()).then(j => j.results?.[0]).catch(() => null)
-  const results = (await Promise.all([search('en'), search('pt')])).filter(Boolean)
+// turns "Lisboa" into a village in Mozambique. Take each language's top hit and keep the
+// larger city; on a tie the current language wins so the name matches what the user typed.
+async function geocodeCity(city, lang) {
+  const search = (l) =>
+    fetchJson(`${GEOCODE_URL}?name=${encodeURIComponent(city)}&count=1&language=${l}&format=json`, { timeout: 6000 })
+      .then(j => j.results?.[0]).catch(() => null)
+  const order = lang === 'pt' ? ['pt', 'en'] : ['en', 'pt']
+  const results = (await Promise.all(order.map(search))).filter(Boolean)
   if (results.length) {
     const r = results.reduce((best, x) => ((x.population || 0) > (best.population || 0) ? x : best))
     return { lat: r.latitude, lon: r.longitude, city: r.name, country: r.country || '', countryCode: (r.country_code || '').toUpperCase() }
   }
-  // Nominatim fallback
-  const url2 = `${NOMINATIM_URL}?q=${encodeURIComponent(city)}&format=json&limit=1&addressdetails=1`
-  const res2 = await fetchWithTimeout(url2, { headers: { 'User-Agent': UA } }, 6000)
-  const nom = await res2.json()
+  const nom = await fetchJson(`${NOMINATIM_URL}?q=${encodeURIComponent(city)}&format=json&limit=1&addressdetails=1`,
+    { headers: { 'User-Agent': UA }, timeout: 6000 })
   if (!nom.length) throw new Error(`City '${city}' not found.`)
   const r = nom[0], addr = r.address || {}
   return { lat: parseFloat(r.lat), lon: parseFloat(r.lon), city: addr.city || addr.town || addr.village || city, country: addr.country || '', countryCode: (addr.country_code || '').toUpperCase() }
 }
 
-async function fetchWeather(lat, lon) {
+function fetchWeather(lat, lon) {
   const params = new URLSearchParams({
     latitude: lat, longitude: lon,
     current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,uv_index,is_day',
@@ -165,25 +181,12 @@ async function fetchWeather(lat, lon) {
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,uv_index_max',
     timezone: 'auto', forecast_days: 7, wind_speed_unit: 'kmh',
   })
-  const res = await fetchWithTimeout(`${OPEN_METEO_URL}?${params}`, {}, 9000)
-  return res.json()
+  return fetchJson(`${OPEN_METEO_URL}?${params}`, { timeout: 9000 })
 }
 
-async function fetchAQI(lat, lon) {
+function fetchAQI(lat, lon) {
   const params = new URLSearchParams({ latitude: lat, longitude: lon, current: 'european_aqi,us_aqi', timezone: 'auto' })
-  const res = await fetchWithTimeout(`${AIR_QUALITY_URL}?${params}`, {}, 9000)
-  return res.json()
-}
-
-async function fetchHistory(month, day) {
-  const mm = String(month).padStart(2, '0'), dd = String(day).padStart(2, '0')
-  try {
-    const res = await fetchWithTimeout(`${WIKIMEDIA_URL}/${mm}/${dd}`, { headers: { 'User-Agent': UA } }, 4000)
-    const json = await res.json()
-    return json.events || []
-  } catch {
-    return [] // non-blocking — don't let Wikipedia slow down the response
-  }
+  return fetchJson(`${AIR_QUALITY_URL}?${params}`, { timeout: 9000 }).catch(() => ({}))
 }
 
 // ─── Weather alerts ───────────────────────────────────────────────────────────
@@ -208,15 +211,10 @@ const feedCache = new Map()
 async function fetchMeteoAlarmFeed(slug) {
   const hit = feedCache.get(slug)
   if (hit && Date.now() - hit.ts < 10 * 60 * 1000) return hit.warnings
-  const res = await fetchWithTimeout(`${METEOALARM_URL}${slug}`, { headers: { 'User-Agent': UA } }, 4000)
-  const json = await res.json()
+  const json = await fetchJson(`${METEOALARM_URL}${slug}`, { headers: { 'User-Agent': UA }, timeout: 3500 })
   const warnings = json.warnings || []
   feedCache.set(slug, { warnings, ts: Date.now() })
   return warnings
-}
-
-function normalize(s) {
-  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
 // MeteoAlarm areas are named in the local language ("Lisboa"), so match against
@@ -225,9 +223,9 @@ const areaCache = new Map()
 async function localAreaNames(lat, lon) {
   const key = `${lat.toFixed(2)},${lon.toFixed(2)}`
   if (areaCache.has(key)) return areaCache.get(key)
-  const url = `${NOMINATIM_REVERSE_URL}?lat=${lat}&lon=${lon}&format=json&zoom=10`
-  const res = await fetchWithTimeout(url, { headers: { 'User-Agent': UA } }, 3000)
-  const addr = (await res.json()).address || {}
+  const json = await fetchJson(`${NOMINATIM_REVERSE_URL}?lat=${lat}&lon=${lon}&format=json&zoom=10`,
+    { headers: { 'User-Agent': UA }, timeout: 3000 })
+  const addr = json.address || {}
   const names = ['city', 'town', 'village', 'municipality', 'county', 'state_district', 'state', 'region', 'province', 'island', 'archipelago']
     .map(k => normalize(addr[k]))
     .filter(n => n.length >= 3)
@@ -261,8 +259,8 @@ async function fetchMeteoAlarmAlerts(countryCode, lat, lon, now) {
 
     const text = {}
     for (const info of infos) {
-      const lang = (info.language || '').slice(0, 2)
-      if (!text[lang]) text[lang] = { title: info.event, description: info.description || '' }
+      const l = (info.language || '').slice(0, 2)
+      if (!text[l]) text[l] = { title: info.event, description: info.description || '' }
     }
 
     const alert = {
@@ -280,9 +278,8 @@ async function fetchMeteoAlarmAlerts(countryCode, lat, lon, now) {
 }
 
 async function fetchNwsAlerts(lat, lon) {
-  const url = `${NWS_ALERTS_URL}?point=${lat.toFixed(4)},${lon.toFixed(4)}`
-  const res = await fetchWithTimeout(url, { headers: { 'User-Agent': UA, Accept: 'application/geo+json' } }, 4000)
-  const json = await res.json()
+  const json = await fetchJson(`${NWS_ALERTS_URL}?point=${lat.toFixed(4)},${lon.toFixed(4)}`,
+    { headers: { 'User-Agent': UA, Accept: 'application/geo+json' }, timeout: 3500 })
   const levelFor = { Extreme: 'red', Severe: 'orange', Moderate: 'yellow', Minor: 'yellow' }
   return (json.features || [])
     .map(f => f.properties || {})
@@ -311,6 +308,7 @@ export default async function handler(req, res) {
   const params = new URL(req.url, 'http://x').searchParams
   const city = params.get('city')?.trim()
   if (!city) return res.status(400).json({ error: 'Missing city parameter' })
+  const lang = params.get('lang') === 'pt' ? 'pt' : 'en'
   const hintLat = parseFloat(params.get('lat'))
   const hintLon = parseFloat(params.get('lon'))
   const hasHint = Number.isFinite(hintLat) && Number.isFinite(hintLon) &&
@@ -319,19 +317,18 @@ export default async function handler(req, res) {
   try {
     const geo = hasHint
       ? { lat: hintLat, lon: hintLon, city, country: params.get('country') || '', countryCode: (params.get('cc') || '').toUpperCase() }
-      : await geocodeCity(city)
+      : await geocodeCity(city, lang)
     const { lat, lon } = geo
     const now = new Date()
 
-    // Weather + AQI are critical; Wikipedia is best-effort with short timeout
-    const [weatherData, aqiData, historyEvents, alerts] = await Promise.all([
+    const [weatherData, aqiData, alerts] = await Promise.all([
       fetchWeather(lat, lon),
       fetchAQI(lat, lon),
-      fetchHistory(now.getMonth() + 1, now.getDate()),
-      fetchAlerts(geo.countryCode, lat, lon, now),
+      withTimeout(fetchAlerts(geo.countryCode, lat, lon, now), 3500, []),
     ])
 
     const curr     = weatherData.current || {}
+    const localNow = curr.time || ''
     const tempC    = curr.temperature_2m ?? 0
     const humidity = curr.relative_humidity_2m ?? 50
     const feels    = curr.apparent_temperature ?? tempC
@@ -342,74 +339,82 @@ export default async function handler(req, res) {
     const isDay    = !!curr.is_day
 
     const [conditionLabel] = wmoCondition(wmoCode)
-    const daily   = weatherData.daily || {}
-    const times   = daily.time || []
-    const hiArr   = daily.temperature_2m_max || []
-    const loArr   = daily.temperature_2m_min || []
-    const srArr   = daily.sunrise || []
-    const ssArr   = daily.sunset || []
-    const ppArr   = daily.precipitation_probability_max || []
-    const uvArr   = daily.uv_index_max || []
-    const dcArr   = daily.weather_code || []
+    const daily = weatherData.daily || {}
+    const times = daily.time || []
+    const hiArr = daily.temperature_2m_max || []
+    const loArr = daily.temperature_2m_min || []
+    const srArr = daily.sunrise || []
+    const ssArr = daily.sunset || []
+    const ppArr = daily.precipitation_probability_max || []
+    const uvArr = daily.uv_index_max || []
+    const dcArr = daily.weather_code || []
 
-    const sunriseRaw = srArr[0] || ''
-    const sunsetRaw  = ssArr[0] || ''
+    const localDate = times[0] || localNow.slice(0, 10)
+    const [mm, dd] = localDate.slice(5).split('-').map(Number)
+    const historyPromise = getHistory({ month: mm, day: dd, city: geo.city, country: geo.country, lang })
+
+    // Sun phase relative to the city's local now
+    const nowMs = localMs(localNow), srMs = localMs(srArr[0]), ssMs = localMs(ssArr[0])
+    let sun = null
+    if ([nowMs, srMs, ssMs].every(Number.isFinite)) {
+      if (nowMs < srMs) {
+        sun = { phase: 'before', minutes: Math.round((srMs - nowMs) / 60000), progress: null }
+      } else if (nowMs < ssMs) {
+        sun = { phase: 'day', minutes: Math.round((ssMs - nowMs) / 60000), progress: (nowMs - srMs) / (ssMs - srMs) }
+      } else {
+        const nextSr = localMs(srArr[1])
+        sun = { phase: 'after', minutes: Number.isFinite(nextSr) ? Math.round((nextSr - nowMs) / 60000) : null, progress: null }
+      }
+    }
 
     let weatherState = wmoWeatherState(wmoCode, !isDay)
-    if (isDay && weatherState === 'clear-day') {
-      try {
-        const ssDiff = (new Date(sunsetRaw) - now) / 1000
-        if (ssDiff > 0 && ssDiff < 7200) weatherState = 'sunset'
-      } catch {}
+    if (isDay && weatherState === 'clear-day' && sun?.phase === 'day' && sun.minutes < 120) weatherState = 'sunset'
+
+    // A local hour is night if it falls outside that day's sunrise–sunset
+    const isNightAt = (t) => {
+      const di = times.indexOf(t.slice(0, 10))
+      if (di < 0 || !srArr[di] || !ssArr[di]) { const h = Number(t.slice(11, 13)); return h < 6 || h >= 20 }
+      return t < srArr[di] || t >= ssArr[di]
     }
 
-    // 5-day forecast
-    const forecast = []
-    for (let i = 0; i < Math.min(5, times.length); i++) {
-      forecast.push({
-        d: dayLabel(times[i], i),
-        i: iconForForecast(dcArr[i] ?? 0, i > 0),
-        hi: Math.round(hiArr[i] ?? 0),
-        lo: Math.round(loArr[i] ?? 0),
-        p: Math.round(ppArr[i] ?? 0),
-      })
-    }
-
-    // Per-day hourly
     const hTemps = weatherData.hourly?.temperature_2m || []
     const hCodes = weatherData.hourly?.weather_code || []
     const hTimes = weatherData.hourly?.time || []
-    const nowDateStr = now.toISOString().slice(0, 10)
+    const nowHour = localNow.slice(0, 13)
+    const hourEntry = (idx) => ({
+      time: hTimes[idx],
+      tempC: Math.round(hTemps[idx]),
+      icon: iconForForecast(hCodes[idx] ?? 0, isNightAt(hTimes[idx])),
+    })
 
-    for (let di = 0; di < forecast.length; di++) {
-      const dayDate = new Date(now)
-      dayDate.setDate(dayDate.getDate() + di)
-      const prefix = dayDate.toISOString().slice(0, 10)
+    // 5-day forecast (daytime icons) with each day's 2-hourly strip
+    const forecast = []
+    for (let i = 0; i < Math.min(5, times.length); i++) {
       const entries = []
-      for (let idx = 0; idx < hTimes.length; idx++) {
-        if (!hTimes[idx].startsWith(prefix) || idx >= hTemps.length) continue
-        const hour = parseInt(hTimes[idx].slice(11, 13), 10)
-        entries.push({
-          time: hTimes[idx],
-          tempC: Math.round(hTemps[idx]),
-          icon: iconForForecast(hCodes[idx] ?? 0, hour < 6 || hour >= 20),
-          isNow: di === 0 && hTimes[idx].slice(0, 13) === now.toISOString().slice(0, 13),
-        })
+      for (let idx = 0; idx < hTimes.length && idx < hTemps.length; idx++) {
+        const t = hTimes[idx]
+        if (!t.startsWith(times[i]) || Number(t.slice(11, 13)) % 2) continue
+        const hour = Number(t.slice(11, 13)), nowH = Number(nowHour.slice(11, 13))
+        entries.push({ ...hourEntry(idx), isNow: i === 0 && hour <= nowH && nowH < hour + 2 })
       }
-      forecast[di].hourly = entries.filter((_, i) => i % 2 === 0).slice(0, 12)
+      forecast.push({
+        d: dayLabel(times[i], i),
+        i: iconForForecast(dcArr[i] ?? 0, false),
+        hi: Math.round(hiArr[i] ?? 0),
+        lo: Math.round(loArr[i] ?? 0),
+        p: Math.round(ppArr[i] ?? 0),
+        hourly: entries.slice(0, 12),
+      })
     }
 
-    // Today's hourly strip
-    const nowHourStr = now.toISOString().slice(0, 13)
-    let currIdx = hTimes.findIndex(t => t.slice(0, 13) >= nowHourStr)
+    // Today's strip: next 24h from the current local hour
+    let currIdx = hTimes.findIndex(t => t.slice(0, 13) >= nowHour)
     if (currIdx < 0) currIdx = 0
     const hourly = []
     for (let i = 0; i < 12; i++) {
       const idx = currIdx + i * 2
       if (idx >= hTemps.length) break
-      const t = hTimes[idx] || ''
-      const hour = parseInt(t.slice(11, 13), 10)
-      hourly.push({ time: t, tempC: Math.round(hTemps[idx]), icon: iconForForecast(hCodes[idx] ?? 0, hour < 6 || hour >= 20), isNow: i === 0 })
+      hourly.push({ ...hourEntry(idx), isNow: i === 0 })
     }
 
     // AQI + UV
@@ -419,45 +424,35 @@ export default async function handler(req, res) {
     const uvDay = parseFloat(uvArr[0] ?? uvCurr)
     const [uvLbl, uvTone] = uvLabel(uvDay)
 
-    // Health
-    const health = healthScore(uvDay, aqiVal, humidity, windSpd)
+    const soon = now.getTime() + 12 * 3600 * 1000
+    const worstAlert = alerts
+      .filter(a => new Date(a.onset).getTime() <= soon)
+      .reduce((worst, a) => (LEVEL_RANK[a.level] > (LEVEL_RANK[worst] || 0) ? a.level : worst), null)
 
-    // History
-    const scored = historyEvents
-      .map(ev => {
-        const text = `${ev.text || ''} ${(ev.pages || []).map(p => p.titles?.normalized || '').join(' ')}`.toLowerCase()
-        return { ev, score: (text.includes(geo.city.toLowerCase()) ? 10 : 0) + (text.includes(geo.country.toLowerCase()) ? 10 : 0) }
-      })
-      .sort((a, b) => b.score - a.score)
-      .map(x => x.ev)
-    const topEvents = (scored.length >= 3 ? scored : historyEvents).slice(0, 3)
-    const history = topEvents.map(ev => {
-      const pages = ev.pages || []
-      return {
-        year:  String(ev.year || ''),
-        title: (ev.text || '').slice(0, 120),
-        body:  (pages[0]?.extract || ev.text || '').slice(0, 200),
-        href:  pages[0]?.content_urls?.desktop?.page || '#',
-      }
+    const health = healthScore({
+      uv: isDay ? uvDay : uvCurr, aqi: aqiVal, humidity, wind: windSpd,
+      code: wmoCode, precip: ppArr[0] ?? 0, isDay, alertLevel: worstAlert,
     })
 
+    const history = await historyPromise
+
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
     res.status(200).json({
-      city: geo.city, country: geo.country, flag: countryFlag(geo.countryCode),
+      city: geo.city, country: geo.country, countryCode: geo.countryCode, flag: countryFlag(geo.countryCode),
       lat, lon,
       tempC: Math.round(tempC * 10) / 10,
       hiC: Math.round(hiArr[0] ?? tempC),
       loC: Math.round(loArr[0] ?? tempC),
       feelsLikeC: Math.round(feels * 10) / 10,
-      condition: conditionLabel, weatherCode: wmoCode, weatherState,
+      condition: conditionLabel, weatherCode: wmoCode, weatherState, isDay,
       windSpeed: Math.round(windSpd), windDir: windDir(windDeg),
       humidity: Math.round(humidity),
-      sunrise: formatTime(sunriseRaw), sunset: formatTime(sunsetRaw),
-      daylight: daylightRemaining(sunriseRaw, sunsetRaw),
+      sunrise: formatTime(srArr[0]), sunset: formatTime(ssArr[0]), sun,
       uv:     { value: Math.round(uvDay * 10) / 10, label: uvLbl, tone: uvTone },
       aqi:    { value: Math.round(aqiVal),           label: aqiLbl, tone: aqiTone },
       health,
       history, forecast, hourly, alerts,
-      timezone: weatherData.timezone,
+      timezone: weatherData.timezone, localDate, localTime: localNow,
       fetchedAt: now.toISOString(),
     })
   } catch (err) {

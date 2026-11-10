@@ -1,5 +1,6 @@
 import Glass from '../primitives/Glass'
 import Tone from '../primitives/Tone'
+import WeatherAlerts from '../alerts/WeatherAlerts'
 import { ForecastIcon, IconRain, IconMoon, IconSun, IconPartlyCloudy } from '../icons/WeatherIcons'
 import { GLeaf, GUV, GDrop } from '../icons/UIGlyphs'
 import { T, relativeTime } from '../../utils/unitUtils'
@@ -57,8 +58,8 @@ export default function DesktopHero({
   return (
     <div>
       {/* Location header */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: data.alerts?.length ? 0 : 20 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
             {data.flag} {data.country}
           </div>
@@ -123,6 +124,12 @@ export default function DesktopHero({
           </button>
         </div>
       </div>
+
+      {data.alerts?.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <WeatherAlerts key={data.city} alerts={data.alerts} timezone={data.timezone} tr={tr} />
+        </div>
+      )}
 
       {/* Main hero card */}
       <Glass style={{ padding: '24px 28px', marginBottom: 12 }}>

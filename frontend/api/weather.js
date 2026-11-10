@@ -184,6 +184,126 @@ async function fetchHistory(month, day) {
   }
 }
 
+// ─── Weather alerts ───────────────────────────────────────────────────────────
+const METEOALARM_URL = 'https://feeds.meteoalarm.org/api/v1/warnings/feeds-'
+const NWS_ALERTS_URL = 'https://api.weather.gov/alerts/active'
+const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse'
+
+const METEOALARM_FEEDS = {
+  AT: 'austria', BA: 'bosnia-herzegovina', BE: 'belgium', BG: 'bulgaria', CH: 'switzerland',
+  CY: 'cyprus', CZ: 'czechia', DE: 'germany', DK: 'denmark', EE: 'estonia', ES: 'spain',
+  FI: 'finland', FR: 'france', GB: 'united-kingdom', GR: 'greece', HR: 'croatia', HU: 'hungary',
+  IE: 'ireland', IL: 'israel', IS: 'iceland', IT: 'italy', LT: 'lithuania', LU: 'luxembourg',
+  LV: 'latvia', MD: 'moldova', ME: 'montenegro', MK: 'republic-of-north-macedonia', MT: 'malta',
+  NL: 'netherlands', NO: 'norway', PL: 'poland', PT: 'portugal', RO: 'romania', RS: 'serbia',
+  SE: 'sweden', SI: 'slovenia', SK: 'slovakia', UA: 'ukraine',
+}
+
+const LEVEL_RANK = { yellow: 1, orange: 2, red: 3 }
+
+// Feeds are country-wide and large; reuse them across requests on a warm instance
+const feedCache = new Map()
+async function fetchMeteoAlarmFeed(slug) {
+  const hit = feedCache.get(slug)
+  if (hit && Date.now() - hit.ts < 10 * 60 * 1000) return hit.warnings
+  const res = await fetchWithTimeout(`${METEOALARM_URL}${slug}`, { headers: { 'User-Agent': UA } }, 4000)
+  const json = await res.json()
+  const warnings = json.warnings || []
+  feedCache.set(slug, { warnings, ts: Date.now() })
+  return warnings
+}
+
+function normalize(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+}
+
+// MeteoAlarm areas are named in the local language ("Lisboa"), so match against
+// a reverse lookup without Accept-Language, which returns local names.
+const areaCache = new Map()
+async function localAreaNames(lat, lon) {
+  const key = `${lat.toFixed(2)},${lon.toFixed(2)}`
+  if (areaCache.has(key)) return areaCache.get(key)
+  const url = `${NOMINATIM_REVERSE_URL}?lat=${lat}&lon=${lon}&format=json&zoom=10`
+  const res = await fetchWithTimeout(url, { headers: { 'User-Agent': UA } }, 3000)
+  const addr = (await res.json()).address || {}
+  const names = ['city', 'town', 'village', 'municipality', 'county', 'state_district', 'state', 'region', 'province', 'island', 'archipelago']
+    .map(k => normalize(addr[k]))
+    .filter(n => n.length >= 3)
+  areaCache.set(key, names)
+  return names
+}
+
+function areaMatches(areaDesc, names) {
+  const area = normalize(areaDesc)
+  const head = normalize(areaDesc.split(' - ')[0])
+  return names.some(n => n === area || n === head || area.includes(n) || n.includes(head))
+}
+
+async function fetchMeteoAlarmAlerts(countryCode, lat, lon, now) {
+  const slug = METEOALARM_FEEDS[countryCode]
+  if (!slug) return []
+  const [warnings, names] = await Promise.all([fetchMeteoAlarmFeed(slug), localAreaNames(lat, lon)])
+  if (!names.length) return []
+
+  const byType = new Map()
+  for (const w of warnings) {
+    const infos = w.alert?.info || []
+    const first = infos[0]
+    if (!first || !(first.area || []).some(a => areaMatches(a.areaDesc, names))) continue
+    if (new Date(first.expires) <= now) continue
+
+    const param = (info, name) => (info.parameter || []).find(p => p.valueName === name)?.value || ''
+    const level = param(first, 'awareness_level').split(';')[1]?.trim()
+    if (!LEVEL_RANK[level]) continue
+    const type = param(first, 'awareness_type').split(';')[1]?.trim() || first.event
+
+    const text = {}
+    for (const info of infos) {
+      const lang = (info.language || '').slice(0, 2)
+      if (!text[lang]) text[lang] = { title: info.event, description: info.description || '' }
+    }
+
+    const alert = {
+      level, type, text,
+      onset: first.onset || first.effective, expires: first.expires,
+      source: first.senderName || 'MeteoAlarm', url: first.web || 'https://meteoalarm.org',
+    }
+    const prev = byType.get(type)
+    if (!prev || LEVEL_RANK[level] > LEVEL_RANK[prev.level] ||
+        (LEVEL_RANK[level] === LEVEL_RANK[prev.level] && alert.onset < prev.onset)) {
+      byType.set(type, alert)
+    }
+  }
+  return [...byType.values()]
+}
+
+async function fetchNwsAlerts(lat, lon) {
+  const url = `${NWS_ALERTS_URL}?point=${lat.toFixed(4)},${lon.toFixed(4)}`
+  const res = await fetchWithTimeout(url, { headers: { 'User-Agent': UA, Accept: 'application/geo+json' } }, 4000)
+  const json = await res.json()
+  const levelFor = { Extreme: 'red', Severe: 'orange', Moderate: 'yellow', Minor: 'yellow' }
+  return (json.features || [])
+    .map(f => f.properties || {})
+    .filter(p => levelFor[p.severity])
+    .map(p => ({
+      level: levelFor[p.severity], type: p.event,
+      text: { en: { title: p.event, description: p.description || p.headline || '' } },
+      onset: p.onset || p.effective, expires: p.ends || p.expires,
+      source: p.senderName || 'National Weather Service', url: 'https://www.weather.gov',
+    }))
+}
+
+async function fetchAlerts(countryCode, lat, lon, now) {
+  try {
+    const alerts = countryCode === 'US'
+      ? await fetchNwsAlerts(lat, lon)
+      : await fetchMeteoAlarmAlerts(countryCode, lat, lon, now)
+    return alerts.sort((a, b) => LEVEL_RANK[b.level] - LEVEL_RANK[a.level]).slice(0, 4)
+  } catch {
+    return [] // non-blocking — alerts must never break or slow the main response
+  }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   const city = new URL(req.url, 'http://x').searchParams.get('city')?.trim()
@@ -195,10 +315,11 @@ export default async function handler(req, res) {
     const now = new Date()
 
     // Weather + AQI are critical; Wikipedia is best-effort with short timeout
-    const [weatherData, aqiData, historyEvents] = await Promise.all([
+    const [weatherData, aqiData, historyEvents, alerts] = await Promise.all([
       fetchWeather(lat, lon),
       fetchAQI(lat, lon),
       fetchHistory(now.getMonth() + 1, now.getDate()),
+      fetchAlerts(geo.countryCode, lat, lon, now),
     ])
 
     const curr     = weatherData.current || {}
@@ -326,7 +447,8 @@ export default async function handler(req, res) {
       uv:     { value: Math.round(uvDay * 10) / 10, label: uvLbl, tone: uvTone },
       aqi:    { value: Math.round(aqiVal),           label: aqiLbl, tone: aqiTone },
       health,
-      history, forecast, hourly,
+      history, forecast, hourly, alerts,
+      timezone: weatherData.timezone,
       fetchedAt: now.toISOString(),
     })
   } catch (err) {

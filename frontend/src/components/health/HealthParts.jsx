@@ -38,7 +38,7 @@ export function HealthBreakdown({ health, tr }) {
   const factors = health?.factors || []
   return (
     <div>
-      <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 10 }}>
+      <div style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.88)', marginBottom: 10 }}>
         {tr.howWeCalculate}
       </div>
       {factors.map((f) => (
@@ -47,7 +47,7 @@ export function HealthBreakdown({ health, tr }) {
             <span style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
               {tr.healthFactors?.[f.key] || f.key}
             </span>
-            <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.55)', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.88)', fontVariantNumeric: 'tabular-nums' }}>
               <span style={{ color: '#fff', fontWeight: 600 }}>{f.score}</span>/100 · {tr.healthWeight(f.weight)}
             </span>
           </div>

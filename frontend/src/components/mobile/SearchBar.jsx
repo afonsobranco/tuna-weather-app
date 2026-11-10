@@ -56,7 +56,7 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
             <h1 style={{ margin: 0, fontFamily: FONT, fontWeight: 500, fontSize: 15, color: 'rgba(255,255,255,0.95)' }}>
               {data.city}
             </h1>
-            <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 13, color: 'rgba(255,255,255,0.75)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 13, color: 'rgba(255,255,255,0.88)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               <span aria-hidden>·</span> <Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)} · {dateStr}
             </span>
           </div>
@@ -77,7 +77,7 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
               width: 38, height: 30, borderRadius: 8, fontSize: 16, lineHeight: 1,
               background: isSaved ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.18)',
-              color: isSaved ? '#FFD45A' : 'rgba(255,255,255,0.6)',
+              color: isSaved ? '#FFD45A' : 'rgba(255,255,255,0.88)',
             }}>
               {isSaved ? '★' : '☆'}
             </span>
@@ -87,7 +87,7 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
 
       {data && (
         <div style={{ paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 4, marginTop: -6 }}>
-          <span style={{ fontFamily: FONT, fontSize: 12, color: isStale ? '#FFC58A' : 'rgba(255,255,255,0.7)' }}>
+          <span style={{ fontFamily: FONT, fontSize: 12, color: isStale ? '#FFC58A' : 'rgba(255,255,255,0.88)' }}>
             {tr.lastUpdated(relativeTime(data.fetchedAt, tr))}
           </span>
           <button

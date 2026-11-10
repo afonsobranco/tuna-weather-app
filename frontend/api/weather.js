@@ -481,7 +481,7 @@ export default async function handler(req, res) {
       aqi:    { value: Math.round(aqiVal),           label: aqiLbl, tone: aqiTone },
       health,
       history, forecast, hourly, alerts,
-      timezone: weatherData.timezone, utcOffsetSeconds: offsetS ?? 0, localDate, localTime: localNow,
+      lang, timezone: weatherData.timezone, utcOffsetSeconds: offsetS ?? 0, localDate, localTime: localNow,
       fetchedAt: now.toISOString(),
     })
   } catch (err) {

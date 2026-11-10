@@ -18,7 +18,7 @@ export default function MobileHourlyStrip({ hourly = [], dayLabel, unit, tr }) {
         margin: '0 0 8px', paddingLeft: 2,
         fontFamily: '"Geist", system-ui, sans-serif',
         fontSize: 12, fontWeight: 500,
-        color: 'rgba(255,255,255,0.75)',
+        color: 'rgba(255,255,255,0.88)',
         textTransform: 'uppercase', letterSpacing: 0.5,
       }}>
         {tr.hourlyForecast}{dayLabel ? ` · ${translateDay(dayLabel, tr)}` : ''}
@@ -54,7 +54,7 @@ export default function MobileHourlyStrip({ hourly = [], dayLabel, unit, tr }) {
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 11,
               fontWeight: h.isNow ? 700 : 500,
-              color: h.isNow ? '#fff' : 'rgba(255,255,255,0.55)',
+              color: h.isNow ? '#fff' : 'rgba(255,255,255,0.88)',
               letterSpacing: h.isNow ? 0.5 : 0.2,
               textTransform: h.isNow ? 'uppercase' : 'none',
             }}>

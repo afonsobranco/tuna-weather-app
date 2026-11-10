@@ -17,7 +17,7 @@ export default function Forecast({ data, unit, tr, selectedIdx = 0, onSelect }) 
           fontFamily: '"Geist", system-ui, sans-serif',
           fontSize: 12,
           fontWeight: 500,
-          color: 'rgba(255,255,255,0.75)',
+          color: 'rgba(255,255,255,0.88)',
           textTransform: 'uppercase',
           letterSpacing: 0.5,
           paddingLeft: 2,
@@ -65,7 +65,7 @@ export default function Forecast({ data, unit, tr, selectedIdx = 0, onSelect }) 
                   fontFamily: '"Geist", system-ui, sans-serif',
                   fontSize: 11,
                   fontWeight: isSelected ? 600 : 400,
-                  color: isSelected ? '#fff' : 'rgba(255,255,255,0.75)',
+                  color: isSelected ? '#fff' : 'rgba(255,255,255,0.88)',
                   marginBottom: 8,
                   textTransform: 'uppercase',
                   letterSpacing: 0.3,
@@ -98,7 +98,7 @@ export default function Forecast({ data, unit, tr, selectedIdx = 0, onSelect }) 
                 style={{
                   fontFamily: '"Geist", system-ui, sans-serif',
                   fontSize: 12,
-                  color: 'rgba(255,255,255,0.7)',
+                  color: 'rgba(255,255,255,0.88)',
                   fontVariantNumeric: 'tabular-nums',
                   marginBottom: 6,
                 }}

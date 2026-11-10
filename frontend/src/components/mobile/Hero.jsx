@@ -36,7 +36,7 @@ export default function Hero({ data, unit, tr }) {
               fontWeight: 200,
               fontSize: 62,
               lineHeight: 1,
-              color: 'rgba(255,255,255,0.7)',
+              color: 'rgba(255,255,255,0.88)',
               marginTop: 4,
             }}
           >
@@ -50,7 +50,7 @@ export default function Hero({ data, unit, tr }) {
             fontFamily: '"Geist", system-ui, sans-serif',
             fontWeight: 400,
             fontSize: 18,
-            color: 'rgba(255,255,255,0.75)',
+            color: 'rgba(255,255,255,0.88)',
             marginTop: 4,
             letterSpacing: '-0.2px',
           }}
@@ -66,7 +66,7 @@ export default function Hero({ data, unit, tr }) {
             gap: 12,
             fontFamily: '"Geist", system-ui, sans-serif',
             fontSize: 13,
-            color: 'rgba(255,255,255,0.6)',
+            color: 'rgba(255,255,255,0.88)',
           }}
         >
           <span>{tr.feels} {feels}°</span>

@@ -18,7 +18,7 @@ function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone, caption 
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8, minWidth: 0 }}>
         {icon}
         <span title={label} style={{
-          fontFamily: FONT, fontSize: 10.5, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: 0.15,
+          fontFamily: FONT, fontSize: 10.5, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 0.15,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {label}
@@ -29,7 +29,7 @@ function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone, caption 
           {value}
         </span>
         {uLabel && (
-          <span style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>
+          <span style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.88)', whiteSpace: 'nowrap' }}>
             {uLabel}
           </span>
         )}
@@ -37,7 +37,7 @@ function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone, caption 
       {(tone || caption) && (
         <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           {tone && <Tone tone={toneTone}>{tone}</Tone>}
-          {caption && <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>{caption}</span>}
+          {caption && <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.88)' }}>{caption}</span>}
         </div>
       )}
     </Glass>
@@ -68,7 +68,7 @@ export default function DesktopHero({
       {/* Location header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)}</span>
           </div>
           <h1
@@ -84,7 +84,7 @@ export default function DesktopHero({
           >
             {data.city}
           </h1>
-          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: isStale ? '#ffa850' : 'rgba(255,255,255,0.7)', marginTop: 6 }}>
+          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: isStale ? '#ffa850' : 'rgba(255,255,255,0.88)', marginTop: 6 }}>
             {tr.lastUpdated(lastUpd)}
           </div>
         </div>
@@ -106,7 +106,7 @@ export default function DesktopHero({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'rgba(255,255,255,0.6)',
+              color: 'rgba(255,255,255,0.88)',
               fontSize: 16,
             }}
             aria-label={tr.refresh}
@@ -142,7 +142,7 @@ export default function DesktopHero({
                   fontWeight: 200,
                   fontSize: 72,
                   lineHeight: 1,
-                  color: 'rgba(255,255,255,0.6)',
+                  color: 'rgba(255,255,255,0.88)',
                   marginTop: 8,
                 }}
               >
@@ -153,7 +153,7 @@ export default function DesktopHero({
               <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 22, fontWeight: 400, color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
                 {tr?.conditions?.[data.condition] || data.condition}
               </div>
-              <div style={{ display: 'flex', gap: 16, fontFamily: '"Geist", system-ui, sans-serif', fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>
+              <div style={{ display: 'flex', gap: 16, fontFamily: '"Geist", system-ui, sans-serif', fontSize: 14, color: 'rgba(255,255,255,0.88)' }}>
                 <span>{tr.feels} {feels}°</span>
                 <span style={{ fontVariantNumeric: 'tabular-nums' }}>{tr.hiLo(hi, lo)}</span>
               </div>

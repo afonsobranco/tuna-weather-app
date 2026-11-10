@@ -41,7 +41,7 @@ export default function DesktopRail({
       style={{
         width: 280, flexShrink: 0, height: '100%',
         display: 'flex', flexDirection: 'column', padding: '24px 16px', gap: 16,
-        background: 'rgba(0,0,0,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        background: 'var(--rail-bg, rgba(0,0,0,0.18))', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
         borderRight: '1px solid rgba(255,255,255,0.08)',
         overflowY: 'auto', position: 'relative', zIndex: 10,
       }}
@@ -53,7 +53,7 @@ export default function DesktopRail({
           <div style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 22, color: '#fff', lineHeight: 1, letterSpacing: '-0.5px' }}>
             Tuna
           </div>
-          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 1 }}>
+          <div style={{ fontFamily: FONT, fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.88)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 1 }}>
             WEATHER APP
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function DesktopRail({
               }} />
               <span style={{
                 fontFamily: FONT, fontSize: 13, fontWeight: active ? 600 : 400,
-                color: active ? '#fff' : 'rgba(255,255,255,0.65)',
+                color: active ? '#fff' : 'rgba(255,255,255,0.88)',
               }}>{label}</span>
             </button>
           )
@@ -103,7 +103,7 @@ export default function DesktopRail({
       {/* Saved cities */}
       <div style={{ flex: 1 }}>
         <div style={{
-          fontFamily: FONT, fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)',
+          fontFamily: FONT, fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.88)',
           textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, paddingLeft: 4,
         }}>
           {tr.saved}
@@ -131,12 +131,12 @@ export default function DesktopRail({
                 >
                   <span style={{
                     fontFamily: FONT, fontSize: 14, fontWeight: isActive ? 600 : 400,
-                    color: isActive ? '#fff' : 'rgba(255,255,255,0.75)',
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.88)',
                   }}>
                     {city.name}
                   </span>
                   {(country || temp != null) && (
-                    <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>
+                    <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.88)' }}>
                       {[country, temp != null ? `${T(temp, unit)}°` : null].filter(Boolean).join(' · ')}
                     </span>
                   )}
@@ -149,7 +149,7 @@ export default function DesktopRail({
                   style={{
                     position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
                     width: 40, height: 40, borderRadius: 10, border: 'none', background: 'none',
-                    cursor: 'pointer', color: 'rgba(255,255,255,0.45)', fontSize: 16, lineHeight: 1,
+                    cursor: 'pointer', color: 'rgba(255,255,255,0.88)', fontSize: 16, lineHeight: 1,
                   }}
                 >
                   <span aria-hidden>×</span>
@@ -167,7 +167,7 @@ export default function DesktopRail({
               marginTop: 8, width: '100%', padding: '9px 12px', minHeight: 40, borderRadius: 10,
               border: '1px dashed rgba(255,255,255,0.25)', background: 'transparent', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 8,
-              color: isCitySaved ? '#FFD45A' : 'rgba(255,255,255,0.65)', fontFamily: FONT, fontSize: 13,
+              color: isCitySaved ? '#FFD45A' : 'rgba(255,255,255,0.88)', fontFamily: FONT, fontSize: 13,
             }}
           >
             <span aria-hidden>{isCitySaved ? '★' : '+'}</span>
@@ -193,7 +193,7 @@ export default function DesktopRail({
           <Flag cc={LANG_CC[language]} size={16} />
         </button>
         <div style={{ flex: 1 }} />
-        <div style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'right', lineHeight: 1.4 }}>
+        <div style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(255,255,255,0.88)', textAlign: 'right', lineHeight: 1.4 }}>
           🐟 {tr.madeWith}
         </div>
       </div>

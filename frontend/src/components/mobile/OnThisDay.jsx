@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Glass from '../primitives/Glass'
 import { GExternal } from '../icons/UIGlyphs'
 import { API_BASE } from '../../utils/api'
+import { placeKey } from '../../utils/place'
 
 const GRAIN_STYLE = {
   position: 'absolute',
@@ -43,18 +44,21 @@ export default function OnThisDay({ data, tr, language }) {
     }
   }
 
-  // New place (by coordinates: "Tokyo" and "Tóquio" are the same place): back to its today
+  // New place: back to its today. Compare rounded coordinates, since the same city can come
+  // back with slightly different precision (Tokyo 139.69171 vs 139.6917) or another name.
+  const place = data ? placeKey({ lat: data.lat, lon: data.lon }) : ''
   useEffect(() => {
     setSelectedDate(today)
     setPicked(null)
     requestRef.current++
-  }, [today, data?.lat, data?.lon])
+  }, [today, place])
 
-  // Same place in another language: keep the picked date and reload it once the
-  // localized data (city name) has arrived
+  // Same place in another language: keep the picked date and reload it once, when the
+  // data in the new language (and its localized city name) has arrived
+  const dataLang = data?.lang ?? language
   useEffect(() => {
-    if (selectedDate && selectedDate !== today) loadDate(selectedDate)
-  }, [language, data?.city])
+    if (dataLang === language && selectedDate && selectedDate !== today) loadDate(selectedDate)
+  }, [dataLang, language])
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value)

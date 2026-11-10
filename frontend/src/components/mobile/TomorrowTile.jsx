@@ -30,7 +30,7 @@ export default function TomorrowTile({ data, unit, tr }) {
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 11,
               fontWeight: 500,
-              color: 'rgba(255,255,255,0.5)',
+              color: 'rgba(255,255,255,0.88)',
               textTransform: 'uppercase',
               letterSpacing: 0.5,
             }}
@@ -52,7 +52,7 @@ export default function TomorrowTile({ data, unit, tr }) {
             style={{
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 12,
-              color: 'rgba(255,255,255,0.55)',
+              color: 'rgba(255,255,255,0.88)',
               marginTop: 2,
             }}
           >
@@ -82,7 +82,7 @@ export default function TomorrowTile({ data, unit, tr }) {
             style={{
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 13,
-              color: 'rgba(255,255,255,0.5)',
+              color: 'rgba(255,255,255,0.88)',
               fontVariantNumeric: 'tabular-nums',
             }}
           >

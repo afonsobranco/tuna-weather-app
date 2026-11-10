@@ -32,7 +32,7 @@ function TimeBlock({ icon, label, value }) {
     <div style={{ textAlign: 'center', minWidth: 80 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, marginBottom: 4 }}>
         {icon}
-        <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+        <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
           {label}
         </span>
       </div>
@@ -82,7 +82,7 @@ export default function Astronomy({ data, tr, noPadding }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, flexWrap: 'wrap',
           }}>
             <GHourglass size={14} color="rgba(255,255,255,0.55)" />
-            <span style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{statusLabel}</span>
+            <span style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.88)' }}>{statusLabel}</span>
             <span style={{ fontFamily: FONT, fontSize: 16, color: 'rgba(255,255,255,0.9)', fontVariantNumeric: 'tabular-nums' }}>
               {formatMinutes(sun.minutes)}
             </span>

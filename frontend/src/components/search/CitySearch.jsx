@@ -21,7 +21,7 @@ export function SearchStatus({ status, tr, onRetry, style }) {
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
         fontFamily: FONT, fontSize: 12, lineHeight: 1.35,
-        color: isError ? '#FFB4B4' : 'rgba(255,255,255,0.75)',
+        color: isError ? '#FFB4B4' : 'rgba(255,255,255,0.88)',
         ...style,
       }}
     >
@@ -136,7 +136,7 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
           }}
         >
           {suggestions.length === 0 ? (
-            <div style={{ padding: '12px 14px', fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
+            <div style={{ padding: '12px 14px', fontFamily: FONT, fontSize: 13, color: 'rgba(255,255,255,0.88)' }}>
               {tr.noMatches}
             </div>
           ) : suggestions.map((s, i) => (
@@ -161,7 +161,7 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
                 <span style={{ fontFamily: FONT, fontSize: small ? 13 : 14, color: '#fff', fontWeight: 500 }}>
                   {s.name}
                 </span>
-                <span style={{ fontFamily: FONT, fontSize: small ? 11 : 12, color: 'rgba(255,255,255,0.5)', marginLeft: 6 }}>
+                <span style={{ fontFamily: FONT, fontSize: small ? 11 : 12, color: 'rgba(255,255,255,0.88)', marginLeft: 6 }}>
                   {[s.admin1, s.country || countryName(s.country_code, tr.locale, s.country_code)].filter(Boolean).join(', ')}
                 </span>
               </div>

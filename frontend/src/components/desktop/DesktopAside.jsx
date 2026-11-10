@@ -93,7 +93,7 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
                 fontSize: 13, letterSpacing: -0.3, textAlign: 'right',
                 fontVariantNumeric: 'tabular-nums',
               }}>
-                {T(d.hi, unit)}°<span style={{ opacity: 0.7, marginLeft: 4 }}>{T(d.lo, unit)}°</span>
+                {T(d.hi, unit)}°<span style={{ opacity: 0.88, marginLeft: 4 }}>{T(d.lo, unit)}°</span>
               </div>
             </button>
           )

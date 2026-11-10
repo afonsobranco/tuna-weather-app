@@ -4,7 +4,7 @@ export default function UnitToggle({ unit, onToggle, tr, height = 40 }) {
   const width = Math.round(height * 1.8)
   const knob = height - 6
   const isC = unit === 'C'
-  const label = { position: 'absolute', top: '50%', transform: 'translateY(-50%)', fontSize: 11, fontWeight: 600, fontFamily: FONT, color: 'rgba(255,255,255,0.6)', pointerEvents: 'none' }
+  const label = { position: 'absolute', top: '50%', transform: 'translateY(-50%)', fontSize: 11, fontWeight: 600, fontFamily: FONT, color: 'rgba(255,255,255,0.88)', pointerEvents: 'none' }
 
   return (
     <button
@@ -14,7 +14,7 @@ export default function UnitToggle({ unit, onToggle, tr, height = 40 }) {
       title={tr.unitToggle(isC ? '°F' : '°C')}
       style={{
         width, height, borderRadius: 999, position: 'relative', flexShrink: 0, padding: 0, cursor: 'pointer',
-        background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)',
+        background: 'var(--chip-bg, rgba(255,255,255,0.12))', border: '1px solid rgba(255,255,255,0.22)',
         backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
       }}
     >

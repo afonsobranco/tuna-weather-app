@@ -76,7 +76,7 @@ export default function DesktopLayout({
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
         background: WARM_STATES.includes(weatherState)
-          ? 'linear-gradient(180deg, rgba(8,12,30,0.30) 0%, rgba(8,12,30,0.22) 40%, rgba(8,12,30,0.42) 100%)'
+          ? 'linear-gradient(180deg, rgba(8,12,30,0.56) 0%, rgba(8,12,30,0.5) 35%, rgba(8,12,30,0.56) 100%)'
           : 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 30%, rgba(0,0,0,0.18) 100%)',
       }} />
 

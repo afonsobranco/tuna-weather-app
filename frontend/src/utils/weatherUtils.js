@@ -7,8 +7,12 @@ export const BG_GRADIENTS = {
   'clear-night': 'linear-gradient(180deg, #060a1c 0%, #0c1230 25%, #131a3d 55%, #1c2147 85%, #2a2f5a 100%)',
 }
 
+// Bright sunrise/sunset/day skies: the layout scrim (≈0.5–0.56 dark) plus these keep
+// 88%-white text above 4.5:1 on the brightest parts of the gradient
 export const WARM_GLASS = {
-  '--glass-bg': 'rgba(14,18,40,0.46)',
+  '--glass-bg': 'rgba(14,18,40,0.32)',
+  '--rail-bg': 'rgba(8,12,30,0.45)',
+  '--chip-bg': 'rgba(8,12,30,0.45)',
   '--glass-antique': 'linear-gradient(155deg, rgba(55,38,18,0.62) 0%, rgba(40,26,12,0.62) 100%)',
 }
 

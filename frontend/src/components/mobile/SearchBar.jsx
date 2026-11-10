@@ -8,7 +8,7 @@ import { countryName } from '../../utils/i18nUtils'
 const FONT = '"Geist", system-ui, sans-serif'
 const LANG_CC = { en: 'GB', pt: 'PT' }
 
-export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSearch, onLanguageChange, searchStatus, onClearSearchStatus }) {
+export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSearch, onLanguageChange, searchStatus, onClearSearchStatus, onRetrySearch }) {
   const { savedCities, addSavedCity, removeSavedCity } = useAppStore()
   const nextLang = language === 'en' ? 'pt' : 'en'
   const place = data ? placeFromData(data) : null
@@ -28,7 +28,7 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
           status={searchStatus}
           onClearStatus={onClearSearchStatus}
         />
-        <UnitToggle unit={unit} onToggle={onToggleUnit} tr={tr} height={40} />
+        <UnitToggle unit={unit} onToggle={onToggleUnit} tr={tr} height={44} />
         <button
           type="button"
           onClick={() => onLanguageChange(nextLang)}
@@ -45,15 +45,15 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
         </button>
       </div>
 
-      <SearchStatus status={searchStatus} tr={tr} style={{ marginTop: 8, paddingLeft: 6 }} />
+      <SearchStatus status={searchStatus} tr={tr} onRetry={onRetrySearch} style={{ marginTop: 8, paddingLeft: 6 }} />
 
       {data && (
         <div style={{ marginTop: 6, paddingLeft: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>
-            <span style={{ fontFamily: FONT, fontWeight: 500, fontSize: 15, color: 'rgba(255,255,255,0.9)' }}>
+            <h1 style={{ margin: 0, display: 'inline', fontFamily: FONT, fontWeight: 500, fontSize: 15, color: 'rgba(255,255,255,0.95)' }}>
               {data.city},
-            </span>
-            <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 13, color: 'rgba(255,255,255,0.6)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            </h1>
+            <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 13, color: 'rgba(255,255,255,0.75)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               <Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)} · {dateStr}
             </span>
           </div>
@@ -61,7 +61,7 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
             type="button"
             onClick={() => (isSaved ? removeSavedCity(place) : addSavedCity(place))}
             aria-pressed={isSaved}
-            aria-label={isSaved ? tr.unsaveCity(data.city) : tr.saveCity(data.city)}
+            aria-label={tr.saveCity(data.city)}
             title={isSaved ? tr.unsaveCity(data.city) : tr.saveCity(data.city)}
             style={{
               width: 44, height: 44, flexShrink: 0, cursor: 'pointer',

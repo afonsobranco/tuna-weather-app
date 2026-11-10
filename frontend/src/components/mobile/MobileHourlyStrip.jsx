@@ -1,6 +1,7 @@
 import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { T } from '../../utils/unitUtils'
+import { translateDay } from '../../utils/i18nUtils'
 
 function formatHour(timeStr) {
   if (!timeStr) return '—'
@@ -8,22 +9,20 @@ function formatHour(timeStr) {
   return t ? t.slice(0, 5) : '—'
 }
 
-export default function MobileHourlyStrip({ data, unit, tr }) {
-  const hourly = data?.hourly || []
+export default function MobileHourlyStrip({ hourly = [], dayLabel, unit, tr }) {
   if (!hourly.length) return null
 
   return (
-    <div style={{ padding: '0 16px 12px' }}>
-      {/* Header */}
-      <div style={{
+    <section style={{ padding: '4px 16px 12px' }}>
+      <h2 style={{
+        margin: '0 0 8px', paddingLeft: 2,
         fontFamily: '"Geist", system-ui, sans-serif',
         fontSize: 12, fontWeight: 500,
-        color: 'rgba(255,255,255,0.5)',
+        color: 'rgba(255,255,255,0.75)',
         textTransform: 'uppercase', letterSpacing: 0.5,
-        marginBottom: 8, paddingLeft: 2,
       }}>
-        {tr?.hourlyForecast || 'Hourly Forecast'}
-      </div>
+        {tr.hourlyForecast}{dayLabel ? ` · ${translateDay(dayLabel, tr)}` : ''}
+      </h2>
 
       {/* Scrollable card row */}
       <div
@@ -78,6 +77,6 @@ export default function MobileHourlyStrip({ data, unit, tr }) {
           </Glass>
         ))}
       </div>
-    </div>
+    </section>
   )
 }

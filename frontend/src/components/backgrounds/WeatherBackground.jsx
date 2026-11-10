@@ -154,7 +154,7 @@ function BgSunset() {
   )
 }
 
-function BgRainy() {
+function BgRainy({ rain = true }) {
   const drops = useMemo(() => {
     return Array.from({ length: 38 }, (_, i) => ({
       left: `${(i * 2.7) % 100}%`,
@@ -199,7 +199,7 @@ function BgRainy() {
         }}
       />
       {/* Raindrops */}
-      {drops.map((d, i) => (
+      {rain && drops.map((d, i) => (
         <span
           key={i}
           className="raindrop"
@@ -270,7 +270,7 @@ function BgClearNight() {
       <div
         style={{
           position: 'absolute',
-          right: '12%',
+          right: '34%',
           top: 10,
           width: 40,
           height: 40,
@@ -314,6 +314,7 @@ export default function WeatherBackground({ state }) {
   switch (state) {
     case 'sunset': return <BgSunset />
     case 'rainy': return <BgRainy />
+    case 'overcast': return <BgRainy rain={false} />
     case 'clear-night': return <BgClearNight />
     default: return <BgClearDay />
   }

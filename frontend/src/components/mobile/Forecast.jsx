@@ -1,34 +1,30 @@
 import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { T } from '../../utils/unitUtils'
+import { translateDay } from '../../utils/i18nUtils'
 
-export default function Forecast({ data, unit, tr }) {
+export default function Forecast({ data, unit, tr, selectedIdx = 0, onSelect }) {
   if (!data || !data.forecast || data.forecast.length === 0) return null
 
   const forecast = data.forecast
-  const translateDay = (d) => {
-    if (d === 'Today')    return tr.today
-    if (d === 'Tomorrow') return tr.tomorrow
-    return tr.days?.[d] || d
-  }
 
   return (
     <div style={{ padding: '0 16px 12px' }}>
       {/* Section header */}
-      <div
+      <h2
         style={{
+          margin: '0 0 8px',
           fontFamily: '"Geist", system-ui, sans-serif',
           fontSize: 12,
           fontWeight: 500,
-          color: 'rgba(255,255,255,0.5)',
+          color: 'rgba(255,255,255,0.75)',
           textTransform: 'uppercase',
           letterSpacing: 0.5,
-          marginBottom: 8,
           paddingLeft: 2,
         }}
       >
         {tr.forecast7day}
-      </div>
+      </h2>
 
       {/* Scrollable row */}
       <div
@@ -43,17 +39,23 @@ export default function Forecast({ data, unit, tr }) {
         {forecast.map((day, idx) => {
           const hi = T(day.hi, unit)
           const lo = T(day.lo, unit)
-          const isToday = idx === 0
+          const isSelected = idx === selectedIdx
 
           return (
-            <Glass
+            <button
               key={idx}
+              type="button"
+              onClick={() => onSelect?.(idx)}
+              aria-pressed={isSelected}
+              style={{ flex: '1 0 84px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', color: 'inherit' }}
+            >
+            <Glass
               style={{
-                flex: '1 0 84px',
                 padding: '12px 8px',
                 textAlign: 'center',
-                border: isToday
-                  ? '1px solid rgba(255,255,255,0.28)'
+                background: isSelected ? 'rgba(255,255,255,0.18)' : undefined,
+                border: isSelected
+                  ? '1px solid rgba(255,255,255,0.45)'
                   : '1px solid rgba(255,255,255,0.12)',
               }}
             >
@@ -62,14 +64,14 @@ export default function Forecast({ data, unit, tr }) {
                 style={{
                   fontFamily: '"Geist", system-ui, sans-serif',
                   fontSize: 11,
-                  fontWeight: isToday ? 600 : 400,
-                  color: isToday ? '#fff' : 'rgba(255,255,255,0.55)',
+                  fontWeight: isSelected ? 600 : 400,
+                  color: isSelected ? '#fff' : 'rgba(255,255,255,0.75)',
                   marginBottom: 8,
                   textTransform: 'uppercase',
                   letterSpacing: 0.3,
                 }}
               >
-                {translateDay(day.d)}
+                {translateDay(day.d, tr)}
               </div>
 
               {/* Icon */}
@@ -96,7 +98,7 @@ export default function Forecast({ data, unit, tr }) {
                 style={{
                   fontFamily: '"Geist", system-ui, sans-serif',
                   fontSize: 12,
-                  color: 'rgba(255,255,255,0.45)',
+                  color: 'rgba(255,255,255,0.7)',
                   fontVariantNumeric: 'tabular-nums',
                   marginBottom: 6,
                 }}
@@ -110,7 +112,7 @@ export default function Forecast({ data, unit, tr }) {
                   style={{
                     fontFamily: '"Geist", system-ui, sans-serif',
                     fontSize: 10,
-                    color: 'rgba(130,190,255,0.75)',
+                    color: '#CFE6FF',
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -118,6 +120,7 @@ export default function Forecast({ data, unit, tr }) {
                 </div>
               )}
             </Glass>
+            </button>
           )
         })}
       </div>

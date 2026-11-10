@@ -21,20 +21,15 @@ export default function OnThisDay({ data, tr, language }) {
   const today = data?.localDate || ''
   const [selectedDate, setSelectedDate] = useState(today)
   const [picked, setPicked] = useState(null) // { date, loading, history } for a non-today date
+  const [minHeight, setMinHeight] = useState(0)
   const requestRef = useRef(0)
+  const eventsRef = useRef(null)
 
-  useEffect(() => {
-    setSelectedDate(today)
-    setPicked(null)
-    requestRef.current++
-  }, [today, data?.city, language])
-
-  const handleDateChange = async (e) => {
-    const value = e.target.value
-    setSelectedDate(value)
-    setExpanded(false)
+  const loadDate = async (value) => {
     const id = ++requestRef.current
     if (!value || value.slice(5) === today.slice(5)) { setPicked(null); return }
+    // Hold the card's height so the page doesn't jump while the archive loads
+    setMinHeight(eventsRef.current?.offsetHeight || 0)
     setPicked({ date: value, loading: true, history: [] })
     const params = new URLSearchParams({ date: value.slice(5), city: data.city, country: data.country || '', lang: language })
     let history = []
@@ -42,7 +37,28 @@ export default function OnThisDay({ data, tr, language }) {
       const res = await fetch(`${API_BASE}/history?${params}`)
       history = (await res.json()).history || []
     } catch {}
-    if (id === requestRef.current) setPicked({ date: value, loading: false, history })
+    if (id === requestRef.current) {
+      setPicked({ date: value, loading: false, history })
+      setMinHeight(0)
+    }
+  }
+
+  // New place: back to its today
+  useEffect(() => {
+    setSelectedDate(today)
+    setPicked(null)
+    requestRef.current++
+  }, [today, data?.city])
+
+  // New language: keep the picked date, reload it in that language
+  useEffect(() => {
+    if (selectedDate && selectedDate !== today) loadDate(selectedDate)
+  }, [language])
+
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value)
+    setExpanded(false)
+    loadDate(e.target.value)
   }
 
   if (!data) return null
@@ -62,8 +78,9 @@ export default function OnThisDay({ data, tr, language }) {
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, position: 'relative' }}>
-          <span
+          <h2
             style={{
+              margin: 0,
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 22,
               fontWeight: 600,
@@ -72,7 +89,7 @@ export default function OnThisDay({ data, tr, language }) {
             }}
           >
             {tr.onThisDay}
-          </span>
+          </h2>
 
           {/* Date picker */}
           <input
@@ -85,7 +102,7 @@ export default function OnThisDay({ data, tr, language }) {
               border: '1px solid rgba(220,190,140,0.3)',
               borderRadius: 8,
               padding: '8px 10px',
-              minHeight: 40,
+              minHeight: 44,
               color: 'rgba(255,240,200,0.9)',
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 11,
@@ -97,7 +114,7 @@ export default function OnThisDay({ data, tr, language }) {
         </div>
 
         {/* Events */}
-        <div style={{ position: 'relative' }} aria-live="polite" aria-busy={loading}>
+        <div ref={eventsRef} style={{ position: 'relative', minHeight: loading ? minHeight : 0 }} aria-live="polite" aria-busy={loading}>
           {(loading || history.length === 0) && (
             <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 13, color: 'rgba(255,240,200,0.75)', display: 'flex', alignItems: 'center', gap: 8 }}>
               {loading && <span aria-hidden className="tuna-spinner" />}

@@ -1,6 +1,7 @@
 import Glass from '../primitives/Glass'
 import { GSunrise, GSunset, GHourglass } from '../icons/UIGlyphs'
 import { formatMinutes } from '../../utils/i18nUtils'
+import { useNow } from '../../hooks/useNow'
 
 const FONT = '"Geist", system-ui, sans-serif'
 
@@ -27,8 +28,19 @@ function TimeBlock({ icon, label, value }) {
 }
 
 export default function Astronomy({ data, tr, noPadding }) {
+  const now = useNow(30000)
   if (!data) return null
-  const { sunrise, sunset, sun } = data
+  const { sunrise, sunset } = data
+
+  // Advance the server's snapshot by the minutes since it was fetched
+  const elapsed = Math.max(0, Math.floor((now - Date.parse(data.fetchedAt)) / 60000))
+  const sun = data.sun && {
+    ...data.sun,
+    minutes: data.sun.minutes == null ? null : Math.max(0, data.sun.minutes - elapsed),
+    progress: data.sun.phase === 'day'
+      ? Math.min(1, data.sun.progress + elapsed / Math.max(1, data.sun.dayLengthMin || 1))
+      : null,
+  }
 
   const isDay = sun?.phase === 'day'
   const dot = arcPoint(isDay ? sun.progress : sun?.phase === 'before' ? 0 : 1)

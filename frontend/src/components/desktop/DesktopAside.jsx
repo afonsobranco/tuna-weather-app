@@ -43,12 +43,12 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
       {/* 5-day forecast */}
       <div ref={forecastRef} style={{ scrollMarginTop: 26 }}>
       <Glass style={{ padding: '16px 18px' }}>
-        <div style={{
-          color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 600,
-          letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 8,
+        <h2 style={{
+          margin: '0 0 8px', color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: 600,
+          letterSpacing: 1.2, textTransform: 'uppercase',
         }}>
           {tr?.forecast7day || '5-Day Forecast'}
-        </div>
+        </h2>
         {data.forecast.map((d, i) => {
           const loPct = (d.lo - minT) / range
           const hiPct = (d.hi - minT) / range
@@ -73,13 +73,13 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
               <div style={{ color: '#fff', fontSize: 13, fontWeight: 500, textAlign: 'left', whiteSpace: 'nowrap' }}>{translateDay(d.d, tr)}</div>
               <ForecastIcon kind={d.i} size={22} />
               <div style={{
-                color: 'rgba(160,200,255,0.95)', fontSize: 11, fontWeight: 600,
+                color: '#CFE6FF', fontSize: 11, fontWeight: 600,
                 display: 'inline-flex', alignItems: 'center', gap: 3,
               }}>
                 <GDrop size={10} color="currentColor" />{d.p}%
               </div>
               {/* Temperature range bar */}
-              <div style={{ position: 'relative', height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.10)' }}>
+              <div style={{ position: 'relative', height: 5, borderRadius: 3, background: 'rgba(0,0,0,0.25)' }}>
                 <div style={{
                   position: 'absolute', top: 0, bottom: 0,
                   left: `${loPct * 100}%`,
@@ -93,7 +93,7 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
                 fontSize: 13, letterSpacing: -0.3, textAlign: 'right',
                 fontVariantNumeric: 'tabular-nums',
               }}>
-                {T(d.hi, unit)}°<span style={{ opacity: 0.5, marginLeft: 4 }}>{T(d.lo, unit)}°</span>
+                {T(d.hi, unit)}°<span style={{ opacity: 0.7, marginLeft: 4 }}>{T(d.lo, unit)}°</span>
               </div>
             </button>
           )
@@ -106,17 +106,17 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
       <Glass antique accent="rgba(220,190,140,0.4)" style={{ padding: '18px 18px 14px' }}>
         <ParchmentGrain />
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6,
           position: 'relative',
         }}>
-          <div style={{
-            fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 600,
+          <h2 style={{
+            margin: 0, fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 600,
             color: '#fff8e7', fontSize: 26, letterSpacing: -0.3, lineHeight: 1,
           }}>
             {tr?.onThisDay || 'On this day'}
-          </div>
+          </h2>
           <span style={{
-            fontSize: 10.5, color: 'rgba(255,240,210,0.7)', fontWeight: 600,
+            fontSize: 10.5, color: 'rgba(255,240,210,0.8)', fontWeight: 600,
             letterSpacing: 1.2, textTransform: 'uppercase',
           }}>
             {dateLabel} · {data.city}

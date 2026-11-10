@@ -5,7 +5,7 @@ import { useGeolocation } from './hooks/useGeolocation'
 import SplashScreen from './components/states/SplashScreen'
 import MobileLayout from './components/layout/MobileLayout'
 import DesktopLayout from './components/layout/DesktopLayout'
-import { DEFAULT_PLACE, hasCoords, placeFromData, resolvePlaceName, samePlace } from './utils/place'
+import { DEFAULT_PLACE, hasCoords, placeFromData, placeKey, resolvePlaceName, samePlace } from './utils/place'
 
 const SPLASH_MIN_MS = 600
 const SPLASH_MAX_MS = 2500
@@ -16,14 +16,16 @@ export default function App() {
   const tr = t()
 
   const [requestedPlace, setRequestedPlace] = useState(() => lastCity || null)
-  const [searchError, setSearchError] = useState(null) // query that matched no city
+  const [searchError, setSearchError] = useState(null) // { status: 'error' | 'failed', query, place }
   const userSearchRef = useRef(false)
   const lastGoodRef = useRef(null)
 
   const { place: geoPlace, status: geoStatus } = useGeolocation()
   // Never wait on a slow GPS lock: requested place, else GPS, else Lisbon
   const activePlace = requestedPlace || geoPlace || DEFAULT_PLACE
-  const { data, isLoading, error, notFound, isStale, isSwitching, refetch } = useWeather(activePlace, language)
+  const { data, isLoading, error, notFound, failed, isStale, isSwitching, refetch } = useWeather(activePlace, language)
+
+  useEffect(() => { document.documentElement.lang = language }, [language])
 
   // Saved cities from before places had coordinates: resolve each once
   useEffect(() => {
@@ -44,23 +46,37 @@ export default function App() {
       setLastCity(resolved)
       const nameOnly = savedCities.find((p) => !hasCoords(p) && samePlace(p, requestedPlace))
       if (nameOnly) upgradeSavedCity(nameOnly, resolved)
+      // From now on ask by coordinates (the response is already cached under them)
+      if (!hasCoords(requestedPlace)) setRequestedPlace(resolved)
     }
   }, [data, isLoading, error])
 
   // Unknown city: keep showing the last good place and tell the user
   useEffect(() => {
     if (!notFound || isLoading) return
-    if (userSearchRef.current) setSearchError(activePlace.name)
+    if (userSearchRef.current) setSearchError({ status: 'error', query: activePlace.name })
     userSearchRef.current = false
     if (!lastGoodRef.current) setLastCity(null)
     setRequestedPlace(lastGoodRef.current)
   }, [notFound, isLoading])
 
+  // Network or server failure: say so, offer a retry, and go back to the last good place
+  useEffect(() => {
+    if (!failed || isLoading) return
+    userSearchRef.current = false
+    if (!lastGoodRef.current) return // nothing to show yet: the layouts render the offline state
+    setSearchError({ status: 'failed', query: activePlace.name, place: activePlace })
+    if (placeKey(lastGoodRef.current) !== placeKey(activePlace)) setRequestedPlace(lastGoodRef.current)
+  }, [failed, isLoading])
+
   const handleSearch = (place) => {
     if (!place?.name?.trim()) return
     userSearchRef.current = true
     setSearchError(null)
-    setRequestedPlace({ ...place, name: place.name.trim() })
+    const next = { ...place, name: place.name.trim() }
+    // Same place again (e.g. after a failure): force a real request instead of a no-op
+    if (placeKey(next) === placeKey(activePlace)) refetch(true)
+    else setRequestedPlace(next)
   }
 
   // Splash: leave as soon as there is something to show (min 600ms, max 2.5s)
@@ -87,8 +103,7 @@ export default function App() {
   }, [])
 
   const searchStatus = searchError
-    ? { status: 'error', query: searchError }
-    : isSwitching ? { status: 'loading', query: activePlace.name } : null
+    || (isSwitching ? { status: 'loading', query: activePlace.name } : null)
 
   const commonProps = {
     data,
@@ -101,10 +116,11 @@ export default function App() {
     activePlace,
     searchStatus,
     onClearSearchStatus: () => setSearchError(null),
+    onRetrySearch: () => searchError?.place && handleSearch(searchError.place),
     onToggleUnit: toggleUnit,
     onSearch: handleSearch,
     onLanguageChange: setLanguage,
-    onRefetch: refetch,
+    onRefetch: () => { setSearchError(null); refetch(true) },
     weatherState: data?.weatherState || 'clear-day',
     geoStatus,
   }

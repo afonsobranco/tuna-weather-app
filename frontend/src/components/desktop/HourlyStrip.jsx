@@ -51,7 +51,7 @@ export default function HourlyStrip({ hourly: hourlyProp, dayLabel, unit, tr }) 
         <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 600, letterSpacing: 1.2, textTransform: 'uppercase' }}>
           {tr?.hourlyForecast || 'Hourly Forecast'}
         </div>
-        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
+        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
           {dayLabel ? translateDay(dayLabel, tr) : tr.next24h}
         </div>
       </div>
@@ -63,7 +63,7 @@ export default function HourlyStrip({ hourly: hourlyProp, dayLabel, unit, tr }) 
             textAlign: 'center',
             fontFamily: '"Geist", system-ui, sans-serif',
             fontSize: 12, fontWeight: 500,
-            color: h.isNow ? '#fff' : 'rgba(255,255,255,0.75)',
+            color: h.isNow ? '#fff' : 'rgba(255,255,255,0.9)',
             fontVariantNumeric: 'tabular-nums',
           }}>
             {T(h.tempC, unit)}°
@@ -117,7 +117,7 @@ export default function HourlyStrip({ hourly: hourlyProp, dayLabel, unit, tr }) 
             <ForecastIcon kind={h.icon} size={20} />
             <div style={{
               fontFamily: '"Geist", system-ui, sans-serif',
-              color: h.isNow ? '#fff' : 'rgba(255,255,255,0.65)',
+              color: h.isNow ? '#fff' : 'rgba(255,255,255,0.8)',
               fontSize: 10.5,
               fontWeight: h.isNow ? 700 : 500,
               letterSpacing: h.isNow ? 0.6 : 0.3,

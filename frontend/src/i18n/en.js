@@ -26,6 +26,9 @@ export default {
   refreshing: "Refreshing data…",
   refresh: "Refresh",
   noMatches: "No matching cities",
+  searchFailed: (q) => `Couldn’t load ${q}. Check your connection.`,
+  retryShort: "Retry",
+  uvPeak: "today’s peak",
   searchLoading: (q) => `Loading ${q}…`,
   searchNotFound: (q) => `No city found for “${q}”. Check the spelling.`,
   unitToggle: (u) => `Switch to ${u}`,
@@ -45,6 +48,7 @@ export default {
   healthTips: {
     alertRed:      'Red weather warning in effect. Stay indoors and follow official advice.',
     alertOrange:   'Weather warning in effect. Avoid unnecessary trips outside.',
+    alertYellow:   'Weather advisory in effect. Check conditions before heading out.',
     storm:         'Thunderstorms around. Stay indoors and avoid open spaces.',
     snow:          'Snow and ice likely. Dress warmly and watch your footing.',
     rain:          'Wet day ahead. Take a rain jacket and plan indoor activities.',

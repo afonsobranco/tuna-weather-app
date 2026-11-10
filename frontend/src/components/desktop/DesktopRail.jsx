@@ -5,6 +5,7 @@ import CitySearch, { SearchStatus } from '../search/CitySearch'
 import { useAppStore } from '../../context/AppContext'
 import { placeFromData, placeKey, samePlace } from '../../utils/place'
 import { T } from '../../utils/unitUtils'
+import { countryName } from '../../utils/i18nUtils'
 
 const FONT = '"Geist", system-ui, sans-serif'
 const LANG_CC = { en: 'GB', pt: 'PT' }
@@ -20,6 +21,7 @@ export default function DesktopRail({
   onLanguageChange,
   searchStatus,
   onClearSearchStatus,
+  onRetrySearch,
   activeSection,
   onNavigate,
 }) {
@@ -66,7 +68,7 @@ export default function DesktopRail({
           onClearStatus={onClearSearchStatus}
           size="sm"
         />
-        <SearchStatus status={searchStatus} tr={tr} style={{ paddingLeft: 8 }} />
+        <SearchStatus status={searchStatus} tr={tr} onRetry={onRetrySearch} style={{ paddingLeft: 8 }} />
       </div>
 
       {/* Section navigation */}
@@ -101,7 +103,7 @@ export default function DesktopRail({
       {/* Saved cities */}
       <div style={{ flex: 1 }}>
         <div style={{
-          fontFamily: FONT, fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.45)',
+          fontFamily: FONT, fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)',
           textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, paddingLeft: 4,
         }}>
           {tr.saved}
@@ -110,12 +112,15 @@ export default function DesktopRail({
           {savedCities.map((city) => {
             const isActive = current ? samePlace(city, current) : false
             const temp = cityTemps?.[placeKey(city)]
+            const country = countryName(city.cc, tr.locale, city.country || '')
+            const fullName = country ? `${city.name}, ${country}` : city.name
             return (
               <li key={placeKey(city)} style={{ position: 'relative' }}>
                 <button
                   type="button"
                   onClick={() => onCity(city)}
                   aria-current={isActive ? 'true' : undefined}
+                  aria-label={fullName}
                   style={{
                     width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                     justifyContent: 'center', padding: '8px 48px 8px 12px', borderRadius: 12, minHeight: 48,
@@ -130,17 +135,17 @@ export default function DesktopRail({
                   }}>
                     {city.name}
                   </span>
-                  {temp != null && (
-                    <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-                      {T(temp, unit)}°
+                  {(country || temp != null) && (
+                    <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>
+                      {[country, temp != null ? `${T(temp, unit)}°` : null].filter(Boolean).join(' · ')}
                     </span>
                   )}
                 </button>
                 <button
                   type="button"
                   onClick={() => removeSavedCity(city)}
-                  aria-label={tr.removeCity(city.name)}
-                  title={tr.removeCity(city.name)}
+                  aria-label={tr.removeCity(fullName)}
+                  title={tr.removeCity(fullName)}
                   style={{
                     position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
                     width: 40, height: 40, borderRadius: 10, border: 'none', background: 'none',

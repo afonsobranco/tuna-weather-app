@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import WeatherBackground from '../backgrounds/WeatherBackground'
 import SearchBar from '../mobile/SearchBar'
 import Hero from '../mobile/Hero'
@@ -10,6 +11,8 @@ import MobileHourlyStrip from '../mobile/MobileHourlyStrip'
 import WeatherAlerts from '../alerts/WeatherAlerts'
 import SkeletonLoader from '../states/SkeletonLoader'
 import EmptyState from '../states/EmptyStates'
+
+const WARM_STATES = ['sunset', 'clear-day']
 
 export default function MobileLayout({
   data,
@@ -27,7 +30,16 @@ export default function MobileLayout({
   onRefetch,
   searchStatus,
   onClearSearchStatus,
+  onRetrySearch,
 }) {
+  const [dayIdx, setDayIdx] = useState(0)
+  const hourlyRef = useRef(null)
+  const selectDay = (i) => {
+    setDayIdx(i)
+    hourlyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+  useEffect(() => { setDayIdx(0) }, [data?.lat, data?.lon])
+
   // Determine which state to show
   const showSkeleton = isLoading && !data
   const showGeoDenied = geoStatus === 'denied' && !data && !isLoading
@@ -58,10 +70,12 @@ export default function MobileLayout({
         <WeatherBackground state={weatherState} />
       </div>
 
-      {/* Readability scrim */}
+      {/* Readability scrim — stronger on bright sunrise/sunset/day skies */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 25%, rgba(0,0,0,0.20) 100%)',
+        background: WARM_STATES.includes(weatherState)
+          ? 'linear-gradient(180deg, rgba(8,12,30,0.30) 0%, rgba(8,12,30,0.22) 40%, rgba(8,12,30,0.42) 100%)'
+          : 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 25%, rgba(0,0,0,0.20) 100%)',
       }} />
 
       {/* Scrollable content */}
@@ -99,6 +113,7 @@ export default function MobileLayout({
               onLanguageChange={onLanguageChange}
               searchStatus={searchStatus}
               onClearSearchStatus={onClearSearchStatus}
+              onRetrySearch={onRetrySearch}
             />
             <Hero data={data} unit={unit} tr={tr} weatherState={weatherState} />
             {data.alerts?.length > 0 && (
@@ -106,12 +121,19 @@ export default function MobileLayout({
                 <WeatherAlerts key={data.city} alerts={data.alerts} timezone={data.timezone} tr={tr} size="sm" />
               </div>
             )}
-            <MobileHourlyStrip data={data} unit={unit} tr={tr} />
+            <div ref={hourlyRef} style={{ paddingTop: data.alerts?.length ? 0 : 10 }}>
+            <MobileHourlyStrip
+              hourly={dayIdx === 0 ? data.hourly : data.forecast?.[dayIdx]?.hourly}
+              dayLabel={dayIdx === 0 ? null : data.forecast?.[dayIdx]?.d}
+              unit={unit}
+              tr={tr}
+            />
+            </div>
             <TomorrowTile data={data} unit={unit} tr={tr} />
-            <HealthDashboard data={data} tr={tr} />
+            <HealthDashboard data={data} unit={unit} tr={tr} />
             <Astronomy data={data} tr={tr} />
             <OnThisDay data={data} tr={tr} language={language} />
-            <Forecast data={data} unit={unit} tr={tr} />
+            <Forecast data={data} unit={unit} tr={tr} selectedIdx={dayIdx} onSelect={selectDay} />
             <div style={{ height: 18 }} />
           </>
         ) : (

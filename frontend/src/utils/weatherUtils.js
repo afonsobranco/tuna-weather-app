@@ -3,6 +3,7 @@ export const BG_GRADIENTS = {
   'clear-day':   'linear-gradient(180deg, #f5cf8c 0%, #f0b178 18%, #d9a18a 32%, #b29bb6 50%, #7b9ec9 70%, #4a7eb3 100%)',
   'sunset':      'linear-gradient(180deg, #1a1a44 0%, #4a2872 20%, #8a3a76 38%, #d35a5a 58%, #f08858 72%, #f5b574 86%, #d49a6a 100%)',
   'rainy':       'linear-gradient(180deg, #1d2735 0%, #2a3a4f 35%, #3d4f64 65%, #2f3e52 100%)',
+  'overcast':    'linear-gradient(180deg, #1d2735 0%, #2a3a4f 35%, #3d4f64 65%, #2f3e52 100%)',
   'clear-night': 'linear-gradient(180deg, #060a1c 0%, #0c1230 25%, #131a3d 55%, #1c2147 85%, #2a2f5a 100%)',
 }
 
@@ -48,12 +49,12 @@ const SNOW_CODES = [71, 73, 75, 77, 85, 86]
 
 export function heroIconKind(data) {
   const code = data?.weatherCode
+  const night = data?.isDay === false || data?.weatherState === 'clear-night'
   if (code >= 95) return 'storm'
   if (SNOW_CODES.includes(code)) return 'snow'
-  switch (data?.weatherState) {
-    case 'rainy': return 'rain'
-    case 'clear-night': return 'moon'
-    case 'clear-day': return 'sun'
-    default: return 'partly'
-  }
+  if (code >= 51) return 'rain'
+  if (code === 3 || (code >= 45 && code < 50)) return 'cloud'
+  if (code === 2) return night ? 'mooncloud' : 'partly'
+  if (code === 0 || code === 1) return night ? 'moon' : 'sun'
+  return night ? 'moon' : 'partly'
 }

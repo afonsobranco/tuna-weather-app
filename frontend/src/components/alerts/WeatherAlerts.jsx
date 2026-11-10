@@ -51,7 +51,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
               aria-expanded={isOpen}
               style={{
                 display: 'inline-flex', alignItems: 'baseline', gap: 7,
-                padding: small ? '9px 12px' : '8px 13px', minHeight: small ? 38 : 34,
+                padding: small ? '11px 13px' : '8px 13px', minHeight: small ? 44 : 34,
                 borderRadius: 18, maxWidth: '100%',
                 background: isOpen ? c.bgOpen : c.bg,
                 border: `1px solid ${c.border}`,

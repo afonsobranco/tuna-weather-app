@@ -9,6 +9,8 @@ import EmptyState from '../states/EmptyStates'
 import Astronomy from '../mobile/Astronomy'
 import DesktopHealthScore from '../desktop/DesktopHealthScore'
 
+const WARM_STATES = ['sunset', 'clear-day']
+
 export default function DesktopLayout({
   data,
   isLoading,
@@ -25,6 +27,7 @@ export default function DesktopLayout({
   onRefetch,
   searchStatus,
   onClearSearchStatus,
+  onRetrySearch,
 }) {
   const [selectedDayIdx, setSelectedDayIdx] = useState(0)
   const [activeSection, setActiveSection] = useState('today')
@@ -72,7 +75,9 @@ export default function DesktopLayout({
       </div>
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 30%, rgba(0,0,0,0.18) 100%)',
+        background: WARM_STATES.includes(weatherState)
+          ? 'linear-gradient(180deg, rgba(8,12,30,0.30) 0%, rgba(8,12,30,0.22) 40%, rgba(8,12,30,0.42) 100%)'
+          : 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 30%, rgba(0,0,0,0.18) 100%)',
       }} />
 
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', height: '100%' }}>
@@ -87,6 +92,7 @@ export default function DesktopLayout({
           onLanguageChange={onLanguageChange}
           searchStatus={searchStatus}
           onClearSearchStatus={onClearSearchStatus}
+          onRetrySearch={onRetrySearch}
           activeSection={activeSection}
           onNavigate={handleNavigate}
         />

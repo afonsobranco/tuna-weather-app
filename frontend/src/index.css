@@ -124,3 +124,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .tuna-spinner { animation-duration: 2.4s; }
 }
+
+.search-pill:focus-within {
+  outline: 2px solid #FFD45A;
+  outline-offset: 2px;
+}

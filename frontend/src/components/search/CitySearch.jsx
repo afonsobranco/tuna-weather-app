@@ -3,12 +3,16 @@ import Glass from '../primitives/Glass'
 import { GSearch } from '../icons/UIGlyphs'
 import { useCitySearch } from '../../hooks/useCitySearch'
 import { placeFromSuggestion } from '../../utils/place'
+import { countryName } from '../../utils/i18nUtils'
 
 const FONT = '"Geist", system-ui, sans-serif'
 
-export function SearchStatus({ status, tr, style }) {
+export function SearchStatus({ status, tr, onRetry, style }) {
   if (!status) return null
-  const isError = status.status === 'error'
+  const isError = status.status === 'error' || status.status === 'failed'
+  const message = status.status === 'failed' ? tr.searchFailed(status.query)
+    : status.status === 'error' ? tr.searchNotFound(status.query)
+    : tr.searchLoading(status.query)
   return (
     <div
       role="status"
@@ -23,7 +27,20 @@ export function SearchStatus({ status, tr, style }) {
       {isError
         ? <span aria-hidden style={{ fontSize: 12 }}>⚠</span>
         : <span aria-hidden className="tuna-spinner" />}
-      <span>{isError ? tr.searchNotFound(status.query) : tr.searchLoading(status.query)}</span>
+      <span>{message}</span>
+      {status.status === 'failed' && onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          style={{
+            marginLeft: 'auto', flexShrink: 0, minHeight: 32, padding: '4px 12px', borderRadius: 999,
+            background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.3)',
+            color: '#fff', fontFamily: FONT, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          {tr.retryShort}
+        </button>
+      )}
     </div>
   )
 }
@@ -36,8 +53,13 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
   const small = size === 'sm'
 
   // A failed search puts the typed text back so it can be corrected
+  const prevStatusRef = useRef(null)
   useEffect(() => {
-    if (status?.status === 'error') search.setQuery(status.query)
+    const prev = prevStatusRef.current
+    prevStatusRef.current = status
+    if (status?.status === 'error' || status?.status === 'failed') search.setQuery(status.query)
+    // The failed query loaded on retry: clear it, unless the user has typed something else
+    else if (status?.status !== 'loading' && prev?.status === 'loading' && search.query === prev.query) search.setQuery('')
   }, [status?.status, status?.query])
 
   useEffect(() => {
@@ -71,7 +93,7 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
 
   return (
     <div ref={wrapperRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-      <Glass style={{
+      <Glass className="search-pill" style={{
         borderRadius: 999, height: small ? 44 : 46,
         display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8,
       }}>
@@ -128,7 +150,8 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
               style={{
                 cursor: 'pointer', padding: '11px 14px', minHeight: 44, boxSizing: 'border-box',
                 borderTop: i ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                background: i === activeIndex ? 'rgba(255,255,255,0.10)' : 'transparent',
+                background: i === activeIndex ? 'rgba(255,255,255,0.20)' : 'transparent',
+                boxShadow: i === activeIndex ? 'inset 3px 0 0 #FFD45A' : 'none',
                 display: 'flex', alignItems: 'center', gap: 10,
               }}
             >
@@ -138,7 +161,7 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
                   {s.name}
                 </span>
                 <span style={{ fontFamily: FONT, fontSize: small ? 11 : 12, color: 'rgba(255,255,255,0.5)', marginLeft: 6 }}>
-                  {[s.admin1, s.country].filter(Boolean).join(', ')}
+                  {[s.admin1, s.country || countryName(s.country_code, tr.locale, s.country_code)].filter(Boolean).join(', ')}
                 </span>
               </div>
             </div>

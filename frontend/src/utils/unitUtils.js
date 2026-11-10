@@ -12,3 +12,15 @@ export function relativeTime(isoString, tr) {
     return '—'
   }
 }
+
+export function formatNumber(value, locale, digits = 1) {
+  if (value == null || Number.isNaN(value)) return '—'
+  return Number(value).toLocaleString(locale, { maximumFractionDigits: digits })
+}
+
+// Wind follows the temperature unit: km/h with °C, mph with °F
+export function windDisplay(kmh, unit) {
+  return unit === 'F'
+    ? { value: Math.round(kmh * 0.621371), label: 'mph' }
+    : { value: Math.round(kmh), label: 'km/h' }
+}

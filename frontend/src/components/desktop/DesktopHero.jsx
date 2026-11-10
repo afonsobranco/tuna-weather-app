@@ -7,29 +7,39 @@ import { countryName } from '../../utils/i18nUtils'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { heroIconKind } from '../../utils/weatherUtils'
 import { GLeaf, GUV, GDrop } from '../icons/UIGlyphs'
-import { T, relativeTime } from '../../utils/unitUtils'
+import { T, relativeTime, formatNumber, windDisplay } from '../../utils/unitUtils'
+import { useNow } from '../../hooks/useNow'
 
+const FONT = '"Geist", system-ui, sans-serif'
 
-function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone }) {
+function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone, caption }) {
   return (
     <Glass style={{ padding: '14px 16px', flex: 1, minWidth: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8, minWidth: 0 }}>
         {icon}
-        <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+        <span title={label} style={{
+          fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.4,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
           {label}
         </span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 24, fontWeight: 500, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+        <span style={{ fontFamily: FONT, fontSize: 24, fontWeight: 500, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
           {value}
         </span>
         {uLabel && (
-          <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+          <span style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap' }}>
             {uLabel}
           </span>
         )}
-        {tone && <Tone tone={toneTone}>{tone}</Tone>}
       </div>
+      {(tone || caption) && (
+        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {tone && <Tone tone={toneTone}>{tone}</Tone>}
+          {caption && <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>{caption}</span>}
+        </div>
+      )}
     </Glass>
   )
 }
@@ -43,6 +53,7 @@ export default function DesktopHero({
   onRefetch,
   isStale,
 }) {
+  useNow(30000) // keeps "Last updated" current
   if (!data) return null
 
   const temp = T(data.tempC, unit)
@@ -56,7 +67,7 @@ export default function DesktopHero({
       {/* Location header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)}</span>
           </div>
           <h1
@@ -72,7 +83,7 @@ export default function DesktopHero({
           >
             {data.city}
           </h1>
-          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: isStale ? '#ffa850' : 'rgba(255,255,255,0.4)', marginTop: 6 }}>
+          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: isStale ? '#ffa850' : 'rgba(255,255,255,0.7)', marginTop: 6 }}>
             {tr.lastUpdated(lastUpd)}
           </div>
         </div>
@@ -166,7 +177,8 @@ export default function DesktopHero({
         <MetricCell
           icon={<GUV size={13} color="rgba(255,255,255,0.5)" />}
           label={tr.uvIndex}
-          value={data.uv?.value ?? 0}
+          value={formatNumber(data.uv?.value ?? 0, tr.locale)}
+          caption={tr.uvPeak}
           tone={tr?.uvLabels?.[data.uv?.label] || data.uv?.label}
           toneTone={data.uv?.tone}
         />
@@ -180,8 +192,8 @@ export default function DesktopHero({
         <MetricCell
           icon={null}
           label={tr.wind}
-          value={data.windSpeed ?? 0}
-          unit={`km/h ${tr?.windDirs?.[data.windDir] || data.windDir || ''}`}
+          value={windDisplay(data.windSpeed ?? 0, unit).value}
+          unit={`${windDisplay(data.windSpeed ?? 0, unit).label} ${tr?.windDirs?.[data.windDir] || data.windDir || ''}`}
         />
         <MetricCell
           icon={<GDrop size={13} color="rgba(255,255,255,0.5)" />}

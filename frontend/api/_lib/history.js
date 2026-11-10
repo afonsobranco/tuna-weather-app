@@ -10,14 +10,26 @@ export function clip(text, max) {
   return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:.–-]+$/, '')}…`
 }
 
+// Feeds for a date never change within a day; keep them on warm instances
+const feedCache = new Map()
+
+async function fetchEvents(base, mm, dd) {
+  const key = `${base}/${mm}/${dd}`
+  const hit = feedCache.get(key)
+  if (hit && Date.now() - hit.ts < 12 * 3600 * 1000) return hit.events
+  const json = await fetchJson(`${base}/api/rest_v1/feed/onthisday/events/${mm}/${dd}`,
+    { headers: { 'User-Agent': UA }, timeout: 4000 })
+  const events = json.events || []
+  feedCache.set(key, { events, ts: Date.now() })
+  return events
+}
+
 export async function getHistory({ month, day, city = '', country = '', lang = 'en' }) {
   const base = WIKI[lang] || WIKI.en
   const mm = String(month).padStart(2, '0'), dd = String(day).padStart(2, '0')
   let events = []
   try {
-    const json = await fetchJson(`${base}/api/rest_v1/feed/onthisday/events/${mm}/${dd}`,
-      { headers: { 'User-Agent': UA }, timeout: 4000 })
-    events = json.events || []
+    events = await fetchEvents(base, mm, dd)
   } catch {
     return [] // best-effort: never let Wikipedia slow down or break a response
   }

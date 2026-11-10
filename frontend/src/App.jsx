@@ -40,6 +40,7 @@ export default function App() {
     if (!data || isLoading || error) return
     lastGoodRef.current = activePlace
     userSearchRef.current = false
+    setSearchError((s) => (s?.status === 'retrying' ? null : s))
     const resolved = placeFromData(data)
     setCityTemp(resolved, data.tempC)
     if (requestedPlace) {
@@ -69,10 +70,10 @@ export default function App() {
     if (placeKey(lastGoodRef.current) !== placeKey(activePlace)) setRequestedPlace(lastGoodRef.current)
   }, [failed, isLoading])
 
-  const handleSearch = (place) => {
+  const handleSearch = (place, keepStatus = false) => {
     if (!place?.name?.trim()) return
     userSearchRef.current = true
-    setSearchError(null)
+    if (!keepStatus) setSearchError(null)
     const next = { ...place, name: place.name.trim() }
     // Same place again (e.g. after a failure): force a real request instead of a no-op
     if (placeKey(next) === placeKey(activePlace)) refetch(true)
@@ -116,7 +117,11 @@ export default function App() {
     activePlace,
     searchStatus,
     onClearSearchStatus: () => setSearchError(null),
-    onRetrySearch: () => searchError?.place && handleSearch(searchError.place),
+    onRetrySearch: () => {
+      if (!searchError?.place) return
+      setSearchError({ ...searchError, status: 'retrying' })
+      handleSearch(searchError.place, true)
+    },
     onToggleUnit: toggleUnit,
     onSearch: handleSearch,
     onLanguageChange: setLanguage,

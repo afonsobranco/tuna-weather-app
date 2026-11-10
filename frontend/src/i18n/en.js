@@ -27,6 +27,7 @@ export default {
   refresh: "Refresh",
   noMatches: "No matching cities",
   searchFailed: (q) => `Couldn’t load ${q}. Check your connection.`,
+  searchRetrying: (q) => `Retrying ${q}…`,
   retryShort: "Retry",
   uvPeak: "today’s peak",
   searchLoading: (q) => `Loading ${q}…`,

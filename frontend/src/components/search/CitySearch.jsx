@@ -12,6 +12,7 @@ export function SearchStatus({ status, tr, onRetry, style }) {
   const isError = status.status === 'error' || status.status === 'failed'
   const message = status.status === 'failed' ? tr.searchFailed(status.query)
     : status.status === 'error' ? tr.searchNotFound(status.query)
+    : status.status === 'retrying' ? tr.searchRetrying(status.query)
     : tr.searchLoading(status.query)
   return (
     <div
@@ -59,7 +60,7 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
     prevStatusRef.current = status
     if (status?.status === 'error' || status?.status === 'failed') search.setQuery(status.query)
     // The failed query loaded on retry: clear it, unless the user has typed something else
-    else if (status?.status !== 'loading' && prev?.status === 'loading' && search.query === prev.query) search.setQuery('')
+    else if (!status && ['loading', 'retrying'].includes(prev?.status) && search.query === prev.query) search.setQuery('')
   }, [status?.status, status?.query])
 
   useEffect(() => {

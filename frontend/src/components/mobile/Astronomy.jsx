@@ -11,6 +11,22 @@ function arcPoint(t) {
   return { x: u * u * 10 + 2 * u * t * 60 + t * t * 110, y: u * u * 45 + 2 * u * t * -5 + t * t * 45 }
 }
 
+// Local wall-clock strings parsed as UTC; adding the city's offset to Date.now() puts
+// "now" on the same scale, so differences come out exact to the second.
+const localMs = (s) => (s ? Date.parse(`${s.length === 16 ? `${s}:00` : s}Z`) : NaN)
+
+function liveSun(data, now) {
+  const base = data.sun
+  if (!base) return null
+  const nowL = now + (data.utcOffsetSeconds || 0) * 1000
+  const sr = localMs(base.sunriseAt), ss = localMs(base.sunsetAt), next = localMs(base.nextSunriseAt)
+  if (![sr, ss].every(Number.isFinite)) return base
+  const mins = (ms) => Math.max(0, Math.floor((ms - nowL) / 60000))
+  if (nowL < sr) return { phase: 'before', minutes: mins(sr), progress: null }
+  if (nowL < ss) return { phase: 'day', minutes: mins(ss), progress: (nowL - sr) / (ss - sr) }
+  return { phase: 'after', minutes: Number.isFinite(next) ? mins(next) : null, progress: null }
+}
+
 function TimeBlock({ icon, label, value }) {
   return (
     <div style={{ textAlign: 'center', minWidth: 80 }}>
@@ -32,15 +48,7 @@ export default function Astronomy({ data, tr, noPadding }) {
   if (!data) return null
   const { sunrise, sunset } = data
 
-  // Advance the server's snapshot by the minutes since it was fetched
-  const elapsed = Math.max(0, Math.floor((now - Date.parse(data.fetchedAt)) / 60000))
-  const sun = data.sun && {
-    ...data.sun,
-    minutes: data.sun.minutes == null ? null : Math.max(0, data.sun.minutes - elapsed),
-    progress: data.sun.phase === 'day'
-      ? Math.min(1, data.sun.progress + elapsed / Math.max(1, data.sun.dayLengthMin || 1))
-      : null,
-  }
+  const sun = liveSun(data, now)
 
   const isDay = sun?.phase === 'day'
   const dot = arcPoint(isDay ? sun.progress : sun?.phase === 'before' ? 0 : 1)

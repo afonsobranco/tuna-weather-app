@@ -7,6 +7,13 @@ export const BG_GRADIENTS = {
   'clear-night': 'linear-gradient(180deg, #060a1c 0%, #0c1230 25%, #131a3d 55%, #1c2147 85%, #2a2f5a 100%)',
 }
 
+export const WARM_GLASS = {
+  '--glass-bg': 'rgba(14,18,40,0.46)',
+  '--glass-antique': 'linear-gradient(155deg, rgba(55,38,18,0.62) 0%, rgba(40,26,12,0.62) 100%)',
+}
+
+export const WARM_STATES = ['sunset', 'clear-day']
+
 export function ringColor(score) {
   if (score >= 75) return '#3ed28b'
   if (score >= 50) return '#ffa850'

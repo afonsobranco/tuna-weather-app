@@ -11,8 +11,7 @@ import MobileHourlyStrip from '../mobile/MobileHourlyStrip'
 import WeatherAlerts from '../alerts/WeatherAlerts'
 import SkeletonLoader from '../states/SkeletonLoader'
 import EmptyState from '../states/EmptyStates'
-
-const WARM_STATES = ['sunset', 'clear-day']
+import { WARM_GLASS, WARM_STATES } from '../../utils/weatherUtils'
 
 export default function MobileLayout({
   data,
@@ -64,6 +63,7 @@ export default function MobileLayout({
       position: 'relative', width: '100%', height: '100%',
       overflow: 'hidden', color: '#fff',
       fontFamily: '"Geist", system-ui, -apple-system, sans-serif',
+      ...(WARM_STATES.includes(weatherState) ? WARM_GLASS : {}),
     }}>
       {/* Dynamic background */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -114,6 +114,8 @@ export default function MobileLayout({
               searchStatus={searchStatus}
               onClearSearchStatus={onClearSearchStatus}
               onRetrySearch={onRetrySearch}
+              onRefetch={onRefetch}
+              isStale={isStale}
             />
             <Hero data={data} unit={unit} tr={tr} weatherState={weatherState} />
             {data.alerts?.length > 0 && (

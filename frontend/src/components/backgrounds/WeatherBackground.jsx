@@ -220,7 +220,7 @@ function BgRainy({ rain = true }) {
 
 function BgClearNight() {
   const stars = useMemo(() => {
-    return Array.from({ length: 80 }, (_, i) => ({
+    return Array.from({ length: 45 }, (_, i) => ({
       left: `${(i * 1.28 + i * i * 0.013) % 100}%`,
       top: `${(i * 1.7 + i * 0.3) % 70}%`,
       size: 1 + (i % 3) * 0.7,

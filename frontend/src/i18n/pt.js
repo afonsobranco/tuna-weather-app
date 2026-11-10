@@ -27,6 +27,7 @@ export default {
   refresh: "Atualizar",
   noMatches: "Nenhuma cidade encontrada",
   searchFailed: (q) => `Não foi possível carregar ${q}. Verifica a ligação.`,
+  searchRetrying: (q) => `A tentar de novo ${q}…`,
   retryShort: "Tentar de novo",
   uvPeak: "pico de hoje",
   searchLoading: (q) => `A carregar ${q}…`,

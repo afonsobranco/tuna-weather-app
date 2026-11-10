@@ -23,15 +23,15 @@ export default function OnThisDay({ data, tr, language }) {
   const [picked, setPicked] = useState(null) // { date, loading, history } for a non-today date
   const [minHeight, setMinHeight] = useState(0)
   const requestRef = useRef(0)
-  const eventsRef = useRef(null)
+  const cardRef = useRef(null)
 
   const loadDate = async (value) => {
     const id = ++requestRef.current
     if (!value || value.slice(5) === today.slice(5)) { setPicked(null); return }
     // Hold the card's height so the page doesn't jump while the archive loads
-    setMinHeight(eventsRef.current?.offsetHeight || 0)
+    setMinHeight(Math.max(0, (cardRef.current?.offsetHeight || 0) - 12)) // minus the wrapper padding
     setPicked({ date: value, loading: true, history: [] })
-    const params = new URLSearchParams({ date: value.slice(5), city: data.city, country: data.country || '', lang: language })
+    const params = new URLSearchParams({ date: value.slice(5), city: data.city, cc: data.countryCode || '', lang: language })
     let history = []
     try {
       const res = await fetch(`${API_BASE}/history?${params}`)
@@ -43,17 +43,18 @@ export default function OnThisDay({ data, tr, language }) {
     }
   }
 
-  // New place: back to its today
+  // New place (by coordinates: "Tokyo" and "Tóquio" are the same place): back to its today
   useEffect(() => {
     setSelectedDate(today)
     setPicked(null)
     requestRef.current++
-  }, [today, data?.city])
+  }, [today, data?.lat, data?.lon])
 
-  // New language: keep the picked date, reload it in that language
+  // Same place in another language: keep the picked date and reload it once the
+  // localized data (city name) has arrived
   useEffect(() => {
     if (selectedDate && selectedDate !== today) loadDate(selectedDate)
-  }, [language])
+  }, [language, data?.city])
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value)
@@ -68,10 +69,10 @@ export default function OnThisDay({ data, tr, language }) {
   const remaining = history.length - 1
 
   return (
-    <div style={{ padding: '0 16px 12px' }}>
+    <div ref={cardRef} style={{ padding: '0 16px 12px' }}>
       <Glass
         antique
-        style={{ padding: '18px 18px 16px' }}
+        style={{ padding: '18px 18px 16px', minHeight: loading ? minHeight : undefined }}
       >
         {/* Grain overlay */}
         <div style={GRAIN_STYLE} />
@@ -114,7 +115,7 @@ export default function OnThisDay({ data, tr, language }) {
         </div>
 
         {/* Events */}
-        <div ref={eventsRef} style={{ position: 'relative', minHeight: loading ? minHeight : 0 }} aria-live="polite" aria-busy={loading}>
+        <div style={{ position: 'relative' }} aria-live="polite" aria-busy={loading}>
           {(loading || history.length === 0) && (
             <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 13, color: 'rgba(255,240,200,0.75)', display: 'flex', alignItems: 'center', gap: 8 }}>
               {loading && <span aria-hidden className="tuna-spinner" />}

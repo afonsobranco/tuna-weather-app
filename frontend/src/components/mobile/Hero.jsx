@@ -6,8 +6,9 @@ export default function Hero({ data, unit, tr }) {
   if (!data) return null
 
   const temp = T(data.tempC, unit)
-  const hi = T(data.hiC, unit)
-  const lo = T(data.loC, unit)
+  // The current reading can sit a fraction outside the forecast range; never show H below now
+  const hi = Math.max(T(data.hiC, unit), temp)
+  const lo = Math.min(T(data.loC, unit), temp)
   const feels = T(data.feelsLikeC, unit)
 
   return (

@@ -4,11 +4,14 @@ import Flag from '../primitives/Flag'
 import { useAppStore } from '../../context/AppContext'
 import { placeFromData, samePlace } from '../../utils/place'
 import { countryName } from '../../utils/i18nUtils'
+import { relativeTime } from '../../utils/unitUtils'
+import { useNow } from '../../hooks/useNow'
 
 const FONT = '"Geist", system-ui, sans-serif'
 const LANG_CC = { en: 'GB', pt: 'PT' }
 
-export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSearch, onLanguageChange, searchStatus, onClearSearchStatus, onRetrySearch }) {
+export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSearch, onLanguageChange, searchStatus, onClearSearchStatus, onRetrySearch, onRefetch, isStale }) {
+  useNow(30000) // keeps "Last updated" current
   const { savedCities, addSavedCity, removeSavedCity } = useAppStore()
   const nextLang = language === 'en' ? 'pt' : 'en'
   const place = data ? placeFromData(data) : null
@@ -50,11 +53,11 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
       {data && (
         <div style={{ marginTop: 6, paddingLeft: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>
-            <h1 style={{ margin: 0, display: 'inline', fontFamily: FONT, fontWeight: 500, fontSize: 15, color: 'rgba(255,255,255,0.95)' }}>
-              {data.city},
+            <h1 style={{ margin: 0, fontFamily: FONT, fontWeight: 500, fontSize: 15, color: 'rgba(255,255,255,0.95)' }}>
+              {data.city}
             </h1>
             <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 13, color: 'rgba(255,255,255,0.75)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)} · {dateStr}
+              <span aria-hidden>·</span> <Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)} · {dateStr}
             </span>
           </div>
           <button
@@ -78,6 +81,27 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
             }}>
               {isSaved ? '★' : '☆'}
             </span>
+          </button>
+        </div>
+      )}
+
+      {data && (
+        <div style={{ paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 4, marginTop: -6 }}>
+          <span style={{ fontFamily: FONT, fontSize: 12, color: isStale ? '#FFC58A' : 'rgba(255,255,255,0.7)' }}>
+            {tr.lastUpdated(relativeTime(data.fetchedAt, tr))}
+          </span>
+          <button
+            type="button"
+            onClick={() => onRefetch?.()}
+            aria-label={tr.refresh}
+            title={tr.refresh}
+            style={{
+              width: 44, height: 44, marginLeft: -6, border: 'none', background: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'rgba(255,255,255,0.8)', fontSize: 16,
+            }}
+          >
+            <span aria-hidden>↻</span>
           </button>
         </div>
       )}

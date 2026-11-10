@@ -15,10 +15,10 @@ const FONT = '"Geist", system-ui, sans-serif'
 function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone, caption }) {
   return (
     <Glass style={{ padding: '14px 16px', flex: 1, minWidth: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8, minWidth: 0 }}>
         {icon}
         <span title={label} style={{
-          fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.4,
+          fontFamily: FONT, fontSize: 10.5, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: 0.15,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {label}
@@ -57,8 +57,9 @@ export default function DesktopHero({
   if (!data) return null
 
   const temp = T(data.tempC, unit)
-  const hi = T(data.hiC, unit)
-  const lo = T(data.loC, unit)
+  // The current reading can sit a fraction outside the forecast range; never show H below now
+  const hi = Math.max(T(data.hiC, unit), temp)
+  const lo = Math.min(T(data.loC, unit), temp)
   const feels = T(data.feelsLikeC, unit)
   const lastUpd = relativeTime(data.fetchedAt, tr)
 

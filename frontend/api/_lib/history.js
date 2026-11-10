@@ -13,23 +13,24 @@ export function clip(text, max) {
 // Feeds for a date never change within a day; keep them on warm instances
 const feedCache = new Map()
 
-async function fetchEvents(base, mm, dd) {
+async function fetchEvents(base, mm, dd, timeout) {
   const key = `${base}/${mm}/${dd}`
   const hit = feedCache.get(key)
   if (hit && Date.now() - hit.ts < 12 * 3600 * 1000) return hit.events
   const json = await fetchJson(`${base}/api/rest_v1/feed/onthisday/events/${mm}/${dd}`,
-    { headers: { 'User-Agent': UA }, timeout: 4000 })
+    { headers: { 'User-Agent': UA }, timeout, retries: 1 })
   const events = json.events || []
   feedCache.set(key, { events, ts: Date.now() })
   return events
 }
 
-export async function getHistory({ month, day, city = '', country = '', lang = 'en' }) {
+// The weather response can't wait long for Wikipedia; the dedicated endpoint can
+export async function getHistory({ month, day, city = '', country = '', lang = 'en', timeout = 4000 }) {
   const base = WIKI[lang] || WIKI.en
   const mm = String(month).padStart(2, '0'), dd = String(day).padStart(2, '0')
   let events = []
   try {
-    events = await fetchEvents(base, mm, dd)
+    events = await fetchEvents(base, mm, dd, timeout)
   } catch {
     return [] // best-effort: never let Wikipedia slow down or break a response
   }

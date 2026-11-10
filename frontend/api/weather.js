@@ -372,20 +372,23 @@ export default async function handler(req, res) {
 
     const localDate = times[0] || localNow.slice(0, 10)
     const [mm, dd] = localDate.slice(5).split('-').map(Number)
-    const historyPromise = getHistory({ month: mm, day: dd, city: geo.city, country: geo.country, lang })
+    let historyCountry = geo.country
+    try { historyCountry = new Intl.DisplayNames([lang], { type: 'region' }).of(geo.countryCode) || geo.country } catch {}
+    const historyPromise = getHistory({ month: mm, day: dd, city: geo.city, country: historyCountry, lang })
 
     // Sun phase relative to the city's local now
     const nowMs = localMs(localNow), srMs = localMs(srArr[0]), ssMs = localMs(ssArr[0])
     let sun = null
     if ([nowMs, srMs, ssMs].every(Number.isFinite)) {
+      const times = { sunriseAt: srArr[0], sunsetAt: ssArr[0], nextSunriseAt: srArr[1] || null }
       const dayLengthMin = Math.round((ssMs - srMs) / 60000)
       if (nowMs < srMs) {
-        sun = { phase: 'before', minutes: Math.round((srMs - nowMs) / 60000), progress: null, dayLengthMin }
+        sun = { phase: 'before', minutes: Math.round((srMs - nowMs) / 60000), progress: null, dayLengthMin, ...times }
       } else if (nowMs < ssMs) {
-        sun = { phase: 'day', minutes: Math.round((ssMs - nowMs) / 60000), progress: (nowMs - srMs) / (ssMs - srMs), dayLengthMin }
+        sun = { phase: 'day', minutes: Math.round((ssMs - nowMs) / 60000), progress: (nowMs - srMs) / (ssMs - srMs), dayLengthMin, ...times }
       } else {
         const nextSr = localMs(srArr[1])
-        sun = { phase: 'after', minutes: Number.isFinite(nextSr) ? Math.round((nextSr - nowMs) / 60000) : null, progress: null, dayLengthMin }
+        sun = { phase: 'after', minutes: Number.isFinite(nextSr) ? Math.round((nextSr - nowMs) / 60000) : null, progress: null, dayLengthMin, ...times }
       }
     }
 
@@ -406,7 +409,7 @@ export default async function handler(req, res) {
     const nowHour = localNow.slice(0, 13)
     const hourEntry = (idx) => ({
       time: hTimes[idx],
-      tempC: Math.round(hTemps[idx]),
+      tempC: Math.round(hTemps[idx] * 10) / 10,
       icon: iconForForecast(hCodes[idx] ?? 0, isNightAt(hTimes[idx])),
     })
 
@@ -423,8 +426,8 @@ export default async function handler(req, res) {
       forecast.push({
         d: dayLabel(times[i], i),
         i: iconForForecast(dcArr[i] ?? 0, false),
-        hi: Math.round(hiArr[i] ?? 0),
-        lo: Math.round(loArr[i] ?? 0),
+        hi: Math.round((hiArr[i] ?? 0) * 10) / 10,
+        lo: Math.round((loArr[i] ?? 0) * 10) / 10,
         p: Math.round(ppArr[i] ?? 0),
         hourly: entries.slice(0, 12),
       })
@@ -437,7 +440,8 @@ export default async function handler(req, res) {
     for (let i = 0; i < 12; i++) {
       const idx = currIdx + i * 2
       if (idx >= hTemps.length) break
-      hourly.push({ ...hourEntry(idx), isNow: i === 0 })
+      const entry = hourEntry(idx)
+      hourly.push(i === 0 ? { ...entry, icon: iconForForecast(wmoCode, !isDay), isNow: true } : { ...entry, isNow: false })
     }
 
     // AQI + UV
@@ -454,7 +458,7 @@ export default async function handler(req, res) {
 
     const precipNext12 = Math.max(0, ...hPrecip.slice(currIdx, currIdx + 12).filter(Number.isFinite))
     const health = healthScore({
-      uv: isDay ? uvDay : uvCurr, aqi: aqiVal, humidity, wind: windSpd, tempC,
+      uv: isDay && (sun?.progress ?? 0) < 0.6 ? uvDay : uvCurr, aqi: aqiVal, humidity, wind: windSpd, tempC,
       code: wmoCode, precip: precipNext12, isDay, alertLevel: worstAlert,
     })
 
@@ -466,8 +470,8 @@ export default async function handler(req, res) {
       city: cityName, country: geo.country, countryCode: geo.countryCode, flag: countryFlag(geo.countryCode),
       lat, lon,
       tempC: Math.round(tempC * 10) / 10,
-      hiC: Math.round(hiArr[0] ?? tempC),
-      loC: Math.round(loArr[0] ?? tempC),
+      hiC: Math.round((hiArr[0] ?? tempC) * 10) / 10,
+      loC: Math.round((loArr[0] ?? tempC) * 10) / 10,
       feelsLikeC: Math.round(feels * 10) / 10,
       condition: conditionLabel, weatherCode: wmoCode, weatherState, isDay,
       windSpeed: Math.round(windSpd), windDir: windDir(windDeg),
@@ -477,7 +481,7 @@ export default async function handler(req, res) {
       aqi:    { value: Math.round(aqiVal),           label: aqiLbl, tone: aqiTone },
       health,
       history, forecast, hourly, alerts,
-      timezone: weatherData.timezone, localDate, localTime: localNow,
+      timezone: weatherData.timezone, utcOffsetSeconds: offsetS ?? 0, localDate, localTime: localNow,
       fetchedAt: now.toISOString(),
     })
   } catch (err) {

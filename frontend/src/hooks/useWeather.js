@@ -28,16 +28,25 @@ function getStale(key) {
   } catch { return null }
 }
 
-export function useWeather(city) {
+function locationParams(loc) {
+  if (!loc) return ''
+  const p = new URLSearchParams({ lat: loc.lat.toFixed(4), lon: loc.lon.toFixed(4) })
+  if (loc.country) p.set('country', loc.country)
+  if (loc.cc) p.set('cc', loc.cc)
+  return `&${p}`
+}
+
+export function useWeather(city, location) {
   const [data, setData] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [isStale, setIsStale] = useState(false)
   const abortRef = useRef(null)
+  const locParams = locationParams(location)
 
-  const fetchWeather = useCallback(async (cityName, force = false) => {
+  const fetchWeather = useCallback(async (cityName, locQuery, force = false) => {
     if (!cityName) return
-    const key = cityName.toLowerCase().trim()
+    const key = `${cityName.toLowerCase().trim()}${locQuery}`
 
     // Serve from cache if fresh
     if (!force) {
@@ -66,7 +75,7 @@ export function useWeather(city) {
 
     try {
       const resp = await window.fetch(
-        `${API_BASE}/weather?city=${encodeURIComponent(cityName)}`,
+        `${API_BASE}/weather?city=${encodeURIComponent(cityName)}${locQuery}`,
         { signal: controller.signal }
       )
       if (!resp.ok) {
@@ -87,15 +96,15 @@ export function useWeather(city) {
   }, [])
 
   useEffect(() => {
-    if (city) fetchWeather(city)
+    if (city) fetchWeather(city, locParams)
     return () => { if (abortRef.current) abortRef.current.abort() }
-  }, [city, fetchWeather])
+  }, [city, locParams, fetchWeather])
 
   return {
     data,
     isLoading,
     error,
     isStale,
-    refetch: (force) => fetchWeather(city, force ?? true),
+    refetch: (force) => fetchWeather(city, locParams, force ?? true),
   }
 }

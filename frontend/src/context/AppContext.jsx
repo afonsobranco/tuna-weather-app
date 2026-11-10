@@ -13,12 +13,16 @@ export const useAppStore = create(
       savedCities: ['Lisbon', 'London', 'Reykjavík', 'Tokyo'],
       lastCity: null,      // persisted last viewed city
       cityTemps: {},       // { cityName: tempC } — last known temp per city
+      cityLocations: {},   // { cityName: { lat, lon, country, cc } } — exact place the user picked
 
       toggleUnit: () => set((s) => ({ unit: s.unit === 'C' ? 'F' : 'C' })),
       setLanguage: (lang) => set({ language: lang }),
       setLastCity: (city) => set({ lastCity: city }),
       setCityTemp: (city, tempC) => set((s) => ({
         cityTemps: { ...s.cityTemps, [city]: tempC },
+      })),
+      setCityLocation: (city, loc) => set((s) => ({
+        cityLocations: { ...s.cityLocations, [city]: loc },
       })),
       addSavedCity: (city) => set((s) => ({
         savedCities: s.savedCities.includes(city)
@@ -38,6 +42,7 @@ export const useAppStore = create(
         savedCities: state.savedCities,
         lastCity: state.lastCity,
         cityTemps: state.cityTemps,
+        cityLocations: state.cityLocations,
       }),
     }
   )

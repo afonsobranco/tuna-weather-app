@@ -92,7 +92,7 @@ function healthScore(uv, aqi, humidity, wind) {
 
 // ─── Misc helpers ─────────────────────────────────────────────────────────────
 function countryFlag(code) {
-  try { return [...code.toUpperCase()].map(c => String.fromCodePoint(0x1F1E0 + c.charCodeAt(0) - 65)).join('') }
+  try { return [...code.toUpperCase()].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('') }
   catch { return '🌍' }
 }
 
@@ -137,13 +137,15 @@ async function fetchWithTimeout(url, opts = {}, ms = 8000) {
 }
 
 // ─── API calls ────────────────────────────────────────────────────────────────
+// Names arrive in the app's languages ("Lisboa" vs "Lisbon"); searching only in English
+// turns "Lisboa" into a village in Mozambique. Take each language's top hit, keep the larger.
 async function geocodeCity(city) {
-  const url = `${GEOCODE_URL}?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
-  const res = await fetchWithTimeout(url, {}, 6000)
-  const json = await res.json()
-  const results = json.results || []
+  const search = (lang) =>
+    fetchWithTimeout(`${GEOCODE_URL}?name=${encodeURIComponent(city)}&count=1&language=${lang}&format=json`, {}, 6000)
+      .then(r => r.json()).then(j => j.results?.[0]).catch(() => null)
+  const results = (await Promise.all([search('en'), search('pt')])).filter(Boolean)
   if (results.length) {
-    const r = results[0]
+    const r = results.reduce((best, x) => ((x.population || 0) > (best.population || 0) ? x : best))
     return { lat: r.latitude, lon: r.longitude, city: r.name, country: r.country || '', countryCode: (r.country_code || '').toUpperCase() }
   }
   // Nominatim fallback
@@ -306,11 +308,18 @@ async function fetchAlerts(countryCode, lat, lon, now) {
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  const city = new URL(req.url, 'http://x').searchParams.get('city')?.trim()
+  const params = new URL(req.url, 'http://x').searchParams
+  const city = params.get('city')?.trim()
   if (!city) return res.status(400).json({ error: 'Missing city parameter' })
+  const hintLat = parseFloat(params.get('lat'))
+  const hintLon = parseFloat(params.get('lon'))
+  const hasHint = Number.isFinite(hintLat) && Number.isFinite(hintLon) &&
+    Math.abs(hintLat) <= 90 && Math.abs(hintLon) <= 180
 
   try {
-    const geo = await geocodeCity(city)
+    const geo = hasHint
+      ? { lat: hintLat, lon: hintLon, city, country: params.get('country') || '', countryCode: (params.get('cc') || '').toUpperCase() }
+      : await geocodeCity(city)
     const { lat, lon } = geo
     const now = new Date()
 

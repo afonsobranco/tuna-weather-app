@@ -30,7 +30,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
   const now = Date.now()
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: small ? 8 : 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         {alerts.map((a, i) => {
           const c = LEVEL_COLORS[a.level] || LEVEL_COLORS.yellow

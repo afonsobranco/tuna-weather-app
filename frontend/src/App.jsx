@@ -12,13 +12,17 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true)
   const [splashFading, setSplashFading] = useState(false)
   const { unit, toggleUnit, language, setLanguage, t,
-          lastCity, setLastCity, setCityTemp, cityTemps, addSavedCity } = useAppStore()
+          lastCity, setLastCity, setCityTemp, cityTemps, addSavedCity,
+          cityLocations, setCityLocation } = useAppStore()
   // Restore last viewed city on mount
   const [searchCity, setSearchCity] = useState(() => lastCity || null)
   const tr = t()
 
   // Geolocation
-  const { city: geoCity, status: geoStatus } = useGeolocation()
+  const { city: geoCity, location: geoLocation, status: geoStatus } = useGeolocation()
+  useEffect(() => {
+    if (geoCity && geoLocation) setCityLocation(geoCity, geoLocation)
+  }, [geoCity, geoLocation])
 
   // Active city: search > geo > default to Lisbon immediately so we never
   // block the weather fetch waiting for a slow mobile GPS lock
@@ -27,7 +31,9 @@ export default function App() {
     geoCity ||
     'Lisbon'
 
-  const { data, isLoading, error, isStale, refetch } = useWeather(activeCity)
+  const activeLocation = cityLocations[activeCity] ||
+    (activeCity === geoCity ? geoLocation : null)
+  const { data, isLoading, error, isStale, refetch } = useWeather(activeCity, activeLocation)
 
   // Splash: hide after 2s minimum
   useEffect(() => {
@@ -54,8 +60,9 @@ export default function App() {
     }
   }, [data])
 
-  const handleSearch = (city) => {
+  const handleSearch = (city, location) => {
     if (city && city.trim()) {
+      if (location) setCityLocation(city.trim(), location)
       setSearchCity(city.trim())
       setLastCity(city.trim())
     }

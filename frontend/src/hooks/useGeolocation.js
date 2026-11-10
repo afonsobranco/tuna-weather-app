@@ -4,6 +4,7 @@ const NOMINATIM = 'https://nominatim.openstreetmap.org/reverse'
 
 export function useGeolocation() {
   const [city, setCity] = useState(null)
+  const [location, setLocation] = useState(null)
   const [status, setStatus] = useState('idle') // idle | detecting | success | denied | error
 
   useEffect(() => {
@@ -22,6 +23,10 @@ export function useGeolocation() {
           const data = await resp.json()
           const addr = data.address || {}
           const name = addr.city || addr.town || addr.village || addr.county || 'Lisbon'
+          setLocation({
+            lat: coords.latitude, lon: coords.longitude,
+            country: addr.country || '', cc: (addr.country_code || '').toUpperCase(),
+          })
           setCity(name)
           setStatus('success')
         } catch {
@@ -38,5 +43,5 @@ export function useGeolocation() {
     )
   }, [])
 
-  return { city, status }
+  return { city, location, status }
 }

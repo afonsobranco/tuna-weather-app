@@ -58,7 +58,7 @@ export default function DesktopRail({
   }
 
   const handleSuggestionClick = (s) => {
-    onSearch(s.name)
+    onSearch(s.name, { lat: s.latitude, lon: s.longitude, country: s.country || '', cc: (s.country_code || '').toUpperCase() })
     setQuery('')
     setSuggestions([])
   }

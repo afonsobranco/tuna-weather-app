@@ -58,7 +58,7 @@ export default function DesktopHero({
   return (
     <div>
       {/* Location header */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: data.alerts?.length ? 0 : 20 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
             {data.flag} {data.country}
@@ -125,12 +125,6 @@ export default function DesktopHero({
         </div>
       </div>
 
-      {data.alerts?.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <WeatherAlerts key={data.city} alerts={data.alerts} timezone={data.timezone} tr={tr} />
-        </div>
-      )}
-
       {/* Main hero card */}
       <Glass style={{ padding: '24px 28px', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -180,6 +174,12 @@ export default function DesktopHero({
           </div>
         </div>
       </Glass>
+
+      {data.alerts?.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <WeatherAlerts key={data.city} alerts={data.alerts} timezone={data.timezone} tr={tr} />
+        </div>
+      )}
 
       {/* 4-up metric grid */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 0 }}>

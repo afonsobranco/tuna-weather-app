@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import Glass from '../primitives/Glass'
-import WeatherAlerts from '../alerts/WeatherAlerts'
 import { GSearch, GLocate } from '../icons/UIGlyphs'
 import { useAppStore } from '../../context/AppContext'
 
@@ -47,7 +46,7 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
   }
 
   const handleSuggestionClick = (s) => {
-    onSearch(s.name)
+    onSearch(s.name, { lat: s.latitude, lon: s.longitude, country: s.country || '', cc: (s.country_code || '').toUpperCase() })
     setQuery('')
     setSuggestions([])
   }
@@ -262,11 +261,6 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
               </button>
             )
           })()}
-        </div>
-      )}
-      {data && (
-        <div style={{ paddingLeft: 4 }}>
-          <WeatherAlerts key={data.city} alerts={data.alerts} timezone={data.timezone} tr={tr} size="sm" />
         </div>
       )}
     </div>

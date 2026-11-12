@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Glass from '../primitives/Glass'
 import { GExternal } from '../icons/UIGlyphs'
 import { API_BASE } from '../../utils/api'
@@ -22,15 +22,13 @@ export default function OnThisDay({ data, tr, language }) {
   const today = data?.localDate || ''
   const [selectedDate, setSelectedDate] = useState(today)
   const [picked, setPicked] = useState(null) // { date, loading, history } for a non-today date
-  const [minHeight, setMinHeight] = useState(0)
   const requestRef = useRef(0)
   const cardRef = useRef(null)
+  const lastHeightRef = useRef(0) // card height while showing events, held while loading
 
   const loadDate = async (value) => {
     const id = ++requestRef.current
     if (!value || value.slice(5) === today.slice(5)) { setPicked(null); return }
-    // Hold the card's height so the page doesn't jump while the archive loads
-    setMinHeight(Math.max(0, (cardRef.current?.offsetHeight || 0) - 12)) // minus the wrapper padding
     setPicked({ date: value, loading: true, history: [] })
     const params = new URLSearchParams({ date: value.slice(5), city: data.city, cc: data.countryCode || '', lang: language })
     let history = []
@@ -38,10 +36,7 @@ export default function OnThisDay({ data, tr, language }) {
       const res = await fetch(`${API_BASE}/history?${params}`)
       history = (await res.json()).history || []
     } catch {}
-    if (id === requestRef.current) {
-      setPicked({ date: value, loading: false, history })
-      setMinHeight(0)
-    }
+    if (id === requestRef.current) setPicked({ date: value, loading: false, history })
   }
 
   // New place: back to its today. Compare rounded coordinates, since the same city can come
@@ -60,15 +55,26 @@ export default function OnThisDay({ data, tr, language }) {
     if (dataLang === language && selectedDate && selectedDate !== today) loadDate(selectedDate)
   }, [dataLang, language])
 
+  // Between a language switch and the localized data arriving, the events on screen are
+  // in the old language: show the loader (at the same height) instead
+  const awaitingLang = dataLang !== language
+
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value)
     setExpanded(false)
     loadDate(e.target.value)
   }
 
+  const loading = !!picked?.loading || awaitingLang
+
+  // Remember the height while events are shown, so the loader can hold it (no page jump)
+  useLayoutEffect(() => {
+    if (!loading && cardRef.current) lastHeightRef.current = Math.max(0, cardRef.current.offsetHeight - 12) // minus wrapper padding
+  })
+  const minHeight = lastHeightRef.current
+
   if (!data) return null
   const history = picked ? picked.history : data.history || []
-  const loading = !!picked?.loading
   const visible = expanded ? history : history.slice(0, 1)
   const remaining = history.length - 1
 
@@ -102,6 +108,7 @@ export default function OnThisDay({ data, tr, language }) {
             value={selectedDate}
             onChange={handleDateChange}
             aria-label={tr.pickDate}
+            className="date-input"
             style={{
               background: 'rgba(220,190,140,0.15)',
               border: '1px solid rgba(220,190,140,0.3)',
@@ -112,7 +119,6 @@ export default function OnThisDay({ data, tr, language }) {
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 11,
               cursor: 'pointer',
-              outline: 'none',
               colorScheme: 'dark',
             }}
           />
@@ -167,7 +173,7 @@ export default function OnThisDay({ data, tr, language }) {
                 style={{
                   fontFamily: '"Geist", system-ui, sans-serif',
                   fontSize: 13,
-                  color: 'rgba(220,200,160,0.7)',
+                  color: 'rgba(245,230,200,0.92)',
                   lineHeight: 1.5,
                   marginBottom: 6,
                 }}
@@ -186,14 +192,14 @@ export default function OnThisDay({ data, tr, language }) {
                     gap: 4,
                     fontFamily: '"Geist", system-ui, sans-serif',
                     fontSize: 11,
-                    color: 'rgba(200,170,100,0.8)',
+                    color: '#F2D9A6',
                     textDecoration: 'none',
                     minHeight: 44,
                     paddingTop: 8,
                   }}
                 >
                   {tr.wikipedia}
-                  <GExternal size={10} color="rgba(200,170,100,0.6)" />
+                  <GExternal size={10} color="#F2D9A6" />
                 </a>
               )}
             </div>

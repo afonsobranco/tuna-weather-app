@@ -1,6 +1,6 @@
 // Maps weather state string to background style
 export const BG_GRADIENTS = {
-  'clear-day':   'linear-gradient(180deg, #f5cf8c 0%, #f0b178 18%, #d9a18a 32%, #b29bb6 50%, #7b9ec9 70%, #4a7eb3 100%)',
+  'clear-day':   'linear-gradient(180deg, #1f5fa8 0%, #2a6fb8 35%, #3a80c2 70%, #5592c9 100%)',
   'sunset':      'linear-gradient(180deg, #1a1a44 0%, #4a2872 20%, #8a3a76 38%, #d35a5a 58%, #f08858 72%, #f5b574 86%, #d49a6a 100%)',
   'rainy':       'linear-gradient(180deg, #1d2735 0%, #2a3a4f 35%, #3d4f64 65%, #2f3e52 100%)',
   'overcast':    'linear-gradient(180deg, #1d2735 0%, #2a3a4f 35%, #3d4f64 65%, #2f3e52 100%)',
@@ -17,6 +17,14 @@ export const WARM_GLASS = {
 }
 
 export const WARM_STATES = ['sunset', 'clear-day']
+
+// Readability scrim per sky. Sunset's orange horizon needs a heavy one; the blue
+// clear-day sky only needs a light navy wash to keep 88%-white text above 4.5:1.
+export function skyScrim(state) {
+  if (state === 'sunset') return 'linear-gradient(180deg, rgba(8,12,30,0.56) 0%, rgba(8,12,30,0.5) 35%, rgba(8,12,30,0.56) 100%)'
+  if (state === 'clear-day') return 'linear-gradient(180deg, rgba(6,24,56,0.24) 0%, rgba(6,24,56,0.26) 35%, rgba(6,24,56,0.32) 70%, rgba(6,24,56,0.36) 100%)'
+  return null
+}
 
 export function ringColor(score) {
   if (score >= 75) return '#3ed28b'

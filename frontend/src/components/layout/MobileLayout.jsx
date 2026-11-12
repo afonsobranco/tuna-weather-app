@@ -11,7 +11,7 @@ import MobileHourlyStrip from '../mobile/MobileHourlyStrip'
 import WeatherAlerts from '../alerts/WeatherAlerts'
 import SkeletonLoader from '../states/SkeletonLoader'
 import EmptyState from '../states/EmptyStates'
-import { WARM_GLASS, WARM_STATES } from '../../utils/weatherUtils'
+import { WARM_GLASS, WARM_STATES, skyScrim } from '../../utils/weatherUtils'
 
 export default function MobileLayout({
   data,
@@ -73,9 +73,7 @@ export default function MobileLayout({
       {/* Readability scrim — stronger on bright sunrise/sunset/day skies */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
-        background: WARM_STATES.includes(weatherState)
-          ? 'linear-gradient(180deg, rgba(8,12,30,0.56) 0%, rgba(8,12,30,0.5) 35%, rgba(8,12,30,0.56) 100%)'
-          : 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 25%, rgba(0,0,0,0.20) 100%)',
+        background: skyScrim(weatherState) || 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 25%, rgba(0,0,0,0.20) 100%)',
       }} />
 
       {/* Scrollable content */}

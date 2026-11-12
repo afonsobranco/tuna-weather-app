@@ -146,7 +146,7 @@ export default function HealthDashboard({ data, unit, tr }) {
                 cursor: 'pointer',
                 fontFamily: '"Geist", system-ui, sans-serif',
                 fontSize: 12,
-                color: 'rgba(255,255,255,0.45)',
+                color: 'rgba(255,255,255,0.88)',
                 padding: 0,
                 minHeight: 44,
                 display: 'flex',

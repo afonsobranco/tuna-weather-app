@@ -133,3 +133,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .star, .raindrop { animation: none; }
 }
+
+/* Chrome doesn't treat date fields as :focus-visible, so give them an explicit ring */
+.date-input:focus,
+.date-input:focus-within {
+  outline: 2px solid #FFD45A;
+  outline-offset: 2px;
+}

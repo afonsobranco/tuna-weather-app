@@ -53,9 +53,9 @@ export default function Forecast({ data, unit, tr, selectedIdx = 0, onSelect }) 
               style={{
                 padding: '12px 8px',
                 textAlign: 'center',
-                background: isSelected ? 'rgba(255,255,255,0.18)' : undefined,
+                background: isSelected ? 'rgba(8,12,30,0.42)' : undefined,
                 border: isSelected
-                  ? '1px solid rgba(255,255,255,0.45)'
+                  ? '1px solid rgba(255,255,255,0.6)'
                   : '1px solid rgba(255,255,255,0.12)',
               }}
             >

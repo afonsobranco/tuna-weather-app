@@ -8,7 +8,7 @@ import SkeletonLoader from '../states/SkeletonLoader'
 import EmptyState from '../states/EmptyStates'
 import Astronomy from '../mobile/Astronomy'
 import DesktopHealthScore from '../desktop/DesktopHealthScore'
-import { WARM_GLASS, WARM_STATES } from '../../utils/weatherUtils'
+import { WARM_GLASS, WARM_STATES, skyScrim } from '../../utils/weatherUtils'
 
 export default function DesktopLayout({
   data,
@@ -75,9 +75,7 @@ export default function DesktopLayout({
       </div>
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
-        background: WARM_STATES.includes(weatherState)
-          ? 'linear-gradient(180deg, rgba(8,12,30,0.56) 0%, rgba(8,12,30,0.5) 35%, rgba(8,12,30,0.56) 100%)'
-          : 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 30%, rgba(0,0,0,0.18) 100%)',
+        background: skyScrim(weatherState) || 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, transparent 30%, rgba(0,0,0,0.18) 100%)',
       }} />
 
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', height: '100%' }}>

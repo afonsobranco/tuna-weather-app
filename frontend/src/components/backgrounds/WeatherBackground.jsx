@@ -29,20 +29,20 @@ function BgClearDay() {
       style={{
         ...BASE,
         background:
-          'linear-gradient(180deg, #f5cf8c 0%, #f0b178 18%, #d9a18a 32%, #b29bb6 50%, #7b9ec9 70%, #4a7eb3 100%)',
+          'linear-gradient(180deg, #1f5fa8 0%, #2a6fb8 35%, #3a80c2 70%, #5592c9 100%)',
       }}
     >
-      {/* Sun halo */}
+      {/* Sun halo — kept above the header row, like the night moon */}
       <div
         style={{
           position: 'absolute',
-          top: '8%',
-          right: '15%',
-          width: 140,
-          height: 140,
+          top: -34,
+          right: 'calc(34% - 38px)',
+          width: 120,
+          height: 120,
           borderRadius: '50%',
           background:
-            'radial-gradient(circle, rgba(255,240,180,0.55) 0%, rgba(255,210,130,0.25) 40%, transparent 70%)',
+            'radial-gradient(circle, rgba(255,240,180,0.4) 0%, rgba(255,210,130,0.18) 40%, transparent 70%)',
           filter: 'blur(8px)',
         }}
       />
@@ -50,10 +50,10 @@ function BgClearDay() {
       <div
         style={{
           position: 'absolute',
-          top: '10%',
-          right: '17%',
-          width: 60,
-          height: 60,
+          top: 8,
+          right: '34%',
+          width: 44,
+          height: 44,
           borderRadius: '50%',
           background: 'radial-gradient(circle, #fff8e0 0%, #ffd060 55%, #f5a840 100%)',
           boxShadow: '0 0 40px rgba(255,200,80,0.6)',

@@ -18,8 +18,9 @@ export default function UnitToggle({ unit, onToggle, tr, height = 40 }) {
         backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
       }}
     >
-      <span aria-hidden style={{ ...label, left: 9 }}>°F</span>
-      <span aria-hidden style={{ ...label, right: 9 }}>°C</span>
+      {isC
+        ? <span aria-hidden style={{ ...label, left: 9 }}>°F</span>
+        : <span aria-hidden style={{ ...label, right: 9 }}>°C</span>}
       <span
         aria-hidden
         style={{

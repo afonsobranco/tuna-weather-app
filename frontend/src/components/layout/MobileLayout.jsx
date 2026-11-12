@@ -18,6 +18,7 @@ export default function MobileLayout({
   isLoading,
   error,
   isStale,
+  langBusy,
   unit,
   language,
   tr,
@@ -103,6 +104,7 @@ export default function MobileLayout({
         {data ? (
           <>
             <SearchBar
+              langBusy={langBusy}
               data={data}
               unit={unit}
               language={language}

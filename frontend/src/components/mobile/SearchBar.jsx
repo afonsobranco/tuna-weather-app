@@ -1,6 +1,7 @@
 import CitySearch, { SearchStatus } from '../search/CitySearch'
 import UnitToggle from '../primitives/UnitToggle'
 import Flag from '../primitives/Flag'
+import LanguageButton from '../primitives/LanguageButton'
 import { useAppStore } from '../../context/AppContext'
 import { placeFromData, regionLabel, samePlace } from '../../utils/place'
 import { countryName } from '../../utils/i18nUtils'
@@ -8,17 +9,19 @@ import { relativeTime } from '../../utils/unitUtils'
 import { useNow } from '../../hooks/useNow'
 
 const FONT = '"Geist", system-ui, sans-serif'
-const LANG_CC = { en: 'GB', pt: 'PT' }
 
-export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSearch, onLanguageChange, searchStatus, onClearSearchStatus, onRetrySearch, onRefetch, isStale }) {
+export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSearch, onLanguageChange, searchStatus, onClearSearchStatus, onRetrySearch, onRefetch, isStale, langBusy }) {
   useNow(30000) // keeps "Last updated" current
   const { savedCities, addSavedCity, removeSavedCity } = useAppStore()
-  const nextLang = language === 'en' ? 'pt' : 'en'
   const place = data ? placeFromData(data) : null
   const isSaved = place ? savedCities.some((p) => samePlace(p, place)) : false
 
   const dateStr = data?.localDate
     ? new Date(`${data.localDate}T12:00:00Z`).toLocaleDateString(tr.locale, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
+    : ''
+
+  const where = data
+    ? [regionLabel(data.city, data.region, data.countryCode), countryName(data.countryCode, tr.locale, data.country)].filter(Boolean).join(', ')
     : ''
 
   return (
@@ -32,33 +35,26 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
           onClearStatus={onClearSearchStatus}
         />
         <UnitToggle unit={unit} onToggle={onToggleUnit} tr={tr} height={44} />
-        <button
-          type="button"
-          onClick={() => onLanguageChange(nextLang)}
-          aria-label={tr.languageToggle}
-          title={tr.languageToggle}
-          style={{
-            width: 44, height: 44, borderRadius: 999, flexShrink: 0, cursor: 'pointer',
-            background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)',
-            backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <Flag cc={LANG_CC[language]} size={18} />
-        </button>
+        <LanguageButton language={language} onChange={onLanguageChange} tr={tr} busy={langBusy} />
       </div>
 
       <SearchStatus status={searchStatus} tr={tr} onRetry={onRetrySearch} style={{ marginTop: 8, paddingLeft: 6 }} />
 
       {data && (
         <div style={{ marginTop: 6, paddingLeft: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>
-            <h1 style={{ margin: 0, fontFamily: FONT, fontWeight: 500, fontSize: 15, color: 'rgba(255,255,255,0.95)' }}>
+          {/* City on its own line; flag, region/country and date on one line below it.
+              A long place name is cut with "…" so the date never wraps away on its own. */}
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h1 style={{ margin: 0, fontFamily: FONT, fontWeight: 500, fontSize: 15, lineHeight: 1.3, color: 'rgba(255,255,255,0.95)' }}>
               {data.city}
             </h1>
-            <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 13, color: 'rgba(255,255,255,0.88)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <span aria-hidden>·</span> <Flag cc={data.countryCode} size={13} /> {[regionLabel(data.city, data.region, data.countryCode), countryName(data.countryCode, tr.locale, data.country)].filter(Boolean).join(', ')} · {dateStr}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0, fontFamily: FONT, fontSize: 13, lineHeight: 1.4, color: 'rgba(255,255,255,0.88)' }}>
+              <Flag cc={data.countryCode} size={13} />
+              <span title={where} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {where}
+              </span>
+              <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}><span aria-hidden>·</span> {dateStr}</span>
+            </div>
           </div>
           <button
             type="button"

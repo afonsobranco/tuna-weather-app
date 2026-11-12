@@ -19,11 +19,14 @@ const GRAIN_STYLE = {
 
 export default function OnThisDay({ data, tr, language }) {
   const [expanded, setExpanded] = useState(false)
-  const { selectedDate, onDateChange, loading, history, cardRef, holdHeight } = useOnThisDay(data, language, 12)
+  const { selectedDate, onDateChange, loading, picked, history, cardRef, holdHeight } = useOnThisDay(data, language, 12)
 
   if (!data) return null
   const visible = expanded ? history : history.slice(0, 1)
   const remaining = history.length - 1
+  const dateLabel = selectedDate
+    ? new Date(`${selectedDate}T12:00:00Z`).toLocaleDateString(tr.locale, { day: 'numeric', month: 'long', timeZone: 'UTC' })
+    : ''
 
   return (
     <div ref={cardRef} style={{ padding: '0 16px 12px' }}>
@@ -53,7 +56,11 @@ export default function OnThisDay({ data, tr, language }) {
         </div>
 
         {/* Events */}
-        <div style={{ position: 'relative' }} aria-live="polite" aria-busy={loading}>
+        {/* One short announcement when a picked date loads, instead of reading the whole list */}
+        <span role="status" className="sr-only">
+          {loading ? tr.historyLoading : picked ? tr.historyShowing(history.length, dateLabel) : ''}
+        </span>
+        <div style={{ position: 'relative' }} aria-busy={loading}>
           <HistoryLoader loading={loading} empty={history.length === 0} tr={tr} />
           {!loading && visible.map((event, idx) => (
             <div
@@ -109,6 +116,7 @@ export default function OnThisDay({ data, tr, language }) {
                   href={event.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={tr.readOnWikipedia(event.title)}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',

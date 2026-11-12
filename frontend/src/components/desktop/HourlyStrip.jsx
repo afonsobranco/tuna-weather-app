@@ -48,9 +48,9 @@ export default function HourlyStrip({ hourly: hourlyProp, dayLabel, unit, tr }) 
         display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
         marginBottom: 8,
       }}>
-        <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: 11, fontWeight: 600, letterSpacing: 1.2, textTransform: 'uppercase' }}>
+        <h2 style={{ margin: 0, color: 'rgba(255,255,255,0.88)', fontSize: 11, fontWeight: 600, letterSpacing: 1.2, textTransform: 'uppercase' }}>
           {tr?.hourlyForecast || 'Hourly Forecast'}
-        </div>
+        </h2>
         <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: 11 }}>
           {dayLabel ? translateDay(dayLabel, tr) : tr.next24h}
         </div>

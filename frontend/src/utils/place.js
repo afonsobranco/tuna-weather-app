@@ -14,6 +14,11 @@ export function displayName(place, lang) {
   return place?.names?.[lang] || place?.name || ''
 }
 
+// A place's region (state/province) in the given language, if we've seen it in that language
+export function displayRegion(place, lang) {
+  return place?.regions?.[lang] || place?.region || ''
+}
+
 const fold = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 // Federal countries where the same city name often exists in several states
@@ -56,8 +61,19 @@ export async function resolvePlaceName(name) {
 export function placeFromData(data) {
   return {
     name: data.city, names: data.lang ? { [data.lang]: data.city } : undefined,
+    regions: data.lang && data.region ? { [data.lang]: data.region } : undefined,
     lat: data.lat, lon: data.lon, region: data.region || '', country: data.country, cc: data.countryCode || '',
   }
+}
+
+// Name and region of a saved place in another language, looked up by name and matched by
+// coordinates (so "Charlotte" in Portuguese comes back in "Carolina do Norte")
+export async function localizePlace(place, lang) {
+  try {
+    const r = await fetch(`${GEO_URL}?name=${encodeURIComponent(place.name)}&count=10&language=${lang}&format=json`)
+    const hit = ((await r.json()).results || []).find((h) => samePlace(place, { lat: h.latitude, lon: h.longitude }))
+    return hit ? { name: hit.name, region: hit.admin1 || '' } : null
+  } catch { return null }
 }
 
 export function placeFromSuggestion(s) {

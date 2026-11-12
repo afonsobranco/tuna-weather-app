@@ -15,6 +15,7 @@ export default function DesktopLayout({
   isLoading,
   error,
   isStale,
+  langBusy,
   unit,
   language,
   tr,
@@ -80,6 +81,7 @@ export default function DesktopLayout({
 
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', height: '100%' }}>
         <DesktopRail
+              langBusy={langBusy}
           data={data}
           unit={unit}
           language={language}

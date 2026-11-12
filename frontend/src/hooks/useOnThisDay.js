@@ -71,6 +71,7 @@ export function useOnThisDay(data, language, heightOffset = 0) {
     selectedDate,
     onDateChange,
     loading,
+    picked: !!picked,
     history: picked ? picked.history : data?.history || [],
     cardRef,
     holdHeight: loading ? lastHeightRef.current : undefined,

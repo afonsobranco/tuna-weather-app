@@ -60,6 +60,7 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
               key={i}
               onClick={() => onDaySelect?.(i)}
               aria-pressed={i === selectedDayIdx}
+              aria-label={tr.dayForecast(translateDay(d.d, tr), d.p ?? 0, T(d.hi, unit), T(d.lo, unit))}
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'minmax(64px, auto) 24px 40px 1fr 52px',
@@ -126,17 +127,22 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
             fontSize: 10.5, color: 'rgba(255,240,210,0.8)', fontWeight: 600,
             letterSpacing: 1.2, textTransform: 'uppercase',
           }}>
-            {dateLabel} · {data.city}
+            {otd.loading ? dateLabel : `${dateLabel} · ${data.city}`}
           </span>
         </div>
 
-        <div style={{ marginTop: 12, position: 'relative' }} aria-live="polite" aria-busy={otd.loading}>
+        {/* One short announcement when a picked date loads, instead of reading the whole list */}
+        <span role="status" className="sr-only">
+          {otd.loading ? tr.historyLoading : otd.picked ? tr.historyShowing(otd.history.length, dateLabel) : ''}
+        </span>
+        <div style={{ marginTop: 12, position: 'relative' }} aria-busy={otd.loading}>
           <HistoryLoader loading={otd.loading} empty={otd.history.length === 0} tr={tr} />
           {!otd.loading && otd.history.map((h, i) => (
             <a
               key={i}
               href={h.href || undefined}
               target={h.href ? '_blank' : undefined}
+              aria-label={h.href ? `${h.year}: ${h.title.replace(/\.$/, '')} (${tr.wikipediaNewTab})` : undefined}
               rel="noopener noreferrer"
               style={{
                 display: 'grid', gridTemplateColumns: '68px 1fr', gap: 14,

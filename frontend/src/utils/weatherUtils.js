@@ -20,7 +20,7 @@ export const WARM_STATES = ['sunset', 'clear-day']
 
 // Cards on the blue clear-day sky get a deeper tint so they separate from the sky
 export function skyVars(state) {
-  if (state === 'clear-day') return { ...WARM_GLASS, '--glass-bg': 'rgba(6,16,44,0.42)' }
+  if (state === 'clear-day') return { ...WARM_GLASS, '--glass-bg': 'rgba(10,26,62,0.34)' }
   if (state === 'sunset') return WARM_GLASS
   return {}
 }

@@ -1,14 +1,13 @@
 import AppMark from '../primitives/AppMark'
 import UnitToggle from '../primitives/UnitToggle'
-import Flag from '../primitives/Flag'
+import LanguageButton from '../primitives/LanguageButton'
 import CitySearch, { SearchStatus } from '../search/CitySearch'
 import { useAppStore } from '../../context/AppContext'
-import { displayName, placeFromData, placeKey, regionLabel, samePlace } from '../../utils/place'
+import { displayName, displayRegion, placeFromData, placeKey, regionLabel, samePlace } from '../../utils/place'
 import { T } from '../../utils/unitUtils'
 import { countryName } from '../../utils/i18nUtils'
 
 const FONT = '"Geist", system-ui, sans-serif'
-const LANG_CC = { en: 'GB', pt: 'PT' }
 
 export default function DesktopRail({
   data,
@@ -24,11 +23,11 @@ export default function DesktopRail({
   onRetrySearch,
   activeSection,
   onNavigate,
+  langBusy,
 }) {
   const { savedCities, cityTemps, addSavedCity, removeSavedCity } = useAppStore()
   const current = data ? placeFromData(data) : null
   const isCitySaved = current ? savedCities.some((p) => samePlace(p, current)) : false
-  const nextLang = language === 'en' ? 'pt' : 'en'
 
   const nav = [
     { key: 'today',   label: tr.today },
@@ -114,7 +113,7 @@ export default function DesktopRail({
             const temp = cityTemps?.[placeKey(city)]
             const name = displayName(city, language)
             const country = countryName(city.cc, tr.locale, city.country || '')
-            const where = [regionLabel(name, city.region, city.cc), country].filter(Boolean).join(', ')
+            const where = [regionLabel(name, displayRegion(city, language), city.cc), country].filter(Boolean).join(', ')
             const fullName = where ? `${name}, ${where}` : name
             return (
               <li key={placeKey(city)} style={{ position: 'relative' }}>
@@ -173,7 +172,7 @@ export default function DesktopRail({
             }}
           >
             <span aria-hidden>{isCitySaved ? '★' : '+'}</span>
-            <span>{isCitySaved ? tr.citySaved(current.name) : tr.saveCity(current.name)}</span>
+            <span>{isCitySaved ? tr.citySaved(data.city) : tr.saveCity(data.city)}</span>
           </button>
         )}
       </div>
@@ -181,19 +180,7 @@ export default function DesktopRail({
       {/* Footer controls */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
         <UnitToggle unit={unit} onToggle={onToggleUnit} tr={tr} height={36} />
-        <button
-          type="button"
-          onClick={() => onLanguageChange(nextLang)}
-          aria-label={tr.languageToggle}
-          title={tr.languageToggle}
-          style={{
-            width: 40, height: 40, borderRadius: 999, cursor: 'pointer',
-            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <Flag cc={LANG_CC[language]} size={16} />
-        </button>
+        <LanguageButton language={language} onChange={onLanguageChange} tr={tr} busy={langBusy} size={40} />
         <div style={{ flex: 1 }} />
         <div style={{ fontFamily: FONT, fontSize: 10, color: 'rgba(255,255,255,0.88)', textAlign: 'right', lineHeight: 1.4 }}>
           🐟 {tr.madeWith}

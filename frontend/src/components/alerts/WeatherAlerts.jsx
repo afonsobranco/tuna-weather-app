@@ -18,14 +18,19 @@ function formatWhen(iso, timezone, locale) {
 }
 
 function pickText(alert, lang, tr) {
-  // No text in the app's language (e.g. a German-only DWD warning): build the title from
-  // the warning's level and type, and fall back to English or the source for the details
-  const own = alert.text[lang]
+  // Agencies' own titles vary a lot ("Stormwarning", "Snow", "fog", German-only DWD text):
+  // when we know the warning type, build the title from its level and type in the app's
+  // language. Details come in the app's language if sent, else English, else the source's.
+  const texts = alert.text || {}
+  const textLang = texts[lang] ? lang : texts.en ? 'en' : Object.keys(texts)[0]
+  const src = texts[textLang] || { title: alert.type, description: '' }
   const typeName = tr.alertTypes?.[(alert.type || '').toLowerCase()]
-  const fallback = alert.text.en || Object.values(alert.text)[0] || { title: alert.type, description: '' }
-  const text = own || (typeName ? { ...fallback, title: tr.alertTitle(alert.level, typeName) } : fallback)
-  // Some agencies (e.g. DWD) send lowercase event names like "fog"
-  return { ...text, title: text.title ? text.title.charAt(0).toUpperCase() + text.title.slice(1) : '' }
+  const title = typeName ? tr.alertTitle(alert.level, typeName) : (src.title || '')
+  return {
+    title: title ? title.charAt(0).toUpperCase() + title.slice(1) : '',
+    description: src.description || '',
+    textLang: textLang || lang,
+  }
 }
 
 export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
@@ -79,7 +84,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
       {open !== null && alerts[open] && (() => {
         const a = alerts[open]
         const c = LEVEL_COLORS[a.level] || LEVEL_COLORS.yellow
-        const { description } = pickText(a, lang, tr)
+        const { description, textLang } = pickText(a, lang, tr)
         return (
           <div style={{
             padding: small ? '10px 12px' : '12px 14px',
@@ -92,7 +97,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
             color: 'rgba(255,255,255,0.85)',
             maxWidth: 560,
           }}>
-            {description && <div style={{ whiteSpace: 'pre-line' }}>{description}</div>}
+            {description && <div lang={textLang !== lang ? textLang : undefined} style={{ whiteSpace: 'pre-line' }}>{description}</div>}
             <div style={{ marginTop: description ? 6 : 0, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>
               {tr.alertSource}:{' '}
               <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)' }}>

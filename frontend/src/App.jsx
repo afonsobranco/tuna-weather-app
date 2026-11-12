@@ -5,14 +5,15 @@ import { useGeolocation } from './hooks/useGeolocation'
 import SplashScreen from './components/states/SplashScreen'
 import MobileLayout from './components/layout/MobileLayout'
 import DesktopLayout from './components/layout/DesktopLayout'
-import { DEFAULT_PLACE, hasCoords, placeFromData, placeKey, resolvePlaceName, samePlace } from './utils/place'
+import { DEFAULT_PLACE, hasCoords, localizePlace, placeFromData, placeKey, resolvePlaceName, samePlace } from './utils/place'
+import SavedToast from './components/states/SavedToast'
 
 const SPLASH_MIN_MS = 600
 const SPLASH_MAX_MS = 2500
 
 export default function App() {
   const { unit, toggleUnit, language, setLanguage, t,
-          lastCity, setLastCity, setCityTemp, savedCities, upgradeSavedCity } = useAppStore()
+          lastCity, setLastCity, setCityTemp, savedCities, upgradeSavedCity, localizeSavedCity } = useAppStore()
   const tr = t()
 
   const [requestedPlace, setRequestedPlace] = useState(() => lastCity || null)
@@ -35,6 +36,17 @@ export default function App() {
     })
   }, [])
 
+  // Saved cities show their name and region in the current language: look up the ones we
+  // haven't seen in it yet (once per city and language; the result is persisted)
+  useEffect(() => {
+    savedCities
+      .filter((p) => hasCoords(p) && (!p.names?.[language] || p.regions?.[language] === undefined))
+      .forEach(async (p) => {
+        const localized = await localizePlace(p, language)
+        if (localized) localizeSavedCity(p, language, localized)
+      })
+  }, [language, savedCities.length])
+
   // Data on screen belongs to the active place
   useEffect(() => {
     if (!data || isLoading || error) return
@@ -43,10 +55,15 @@ export default function App() {
     setSearchError((s) => (s?.status === 'retrying' ? null : s))
     const resolved = placeFromData(data)
     setCityTemp(resolved, data.tempC)
-    // Remember this saved city's name in the current language, and its region
+    // Remember this saved city's name and region in the current language
     const saved = savedCities.find((p) => samePlace(p, resolved))
-    if (saved && data.lang && (saved.names?.[data.lang] !== data.city || (!saved.region && data.region))) {
-      upgradeSavedCity(saved, { ...saved, names: { ...saved.names, [data.lang]: data.city }, region: saved.region || data.region || '' })
+    if (saved && data.lang && (saved.names?.[data.lang] !== data.city || saved.regions?.[data.lang] !== (data.region || ''))) {
+      upgradeSavedCity(saved, {
+        ...saved,
+        names: { ...saved.names, [data.lang]: data.city },
+        regions: { ...saved.regions, [data.lang]: data.region || '' },
+        region: saved.region || data.region || '',
+      })
     }
     if (requestedPlace) {
       setLastCity(resolved)
@@ -112,6 +129,9 @@ export default function App() {
     return () => window.removeEventListener('resize', handler)
   }, [])
 
+  // Same place, other language, still loading: the language buttons show they're busy
+  const langBusy = isLoading && !!data?.lang && data.lang !== language
+
   const searchStatus = searchError
     || (isSwitching ? { status: 'loading', query: activePlace.name } : null)
 
@@ -120,6 +140,7 @@ export default function App() {
     isLoading,
     error,
     isStale,
+    langBusy,
     unit,
     language,
     tr,
@@ -163,6 +184,8 @@ export default function App() {
           <DesktopLayout {...commonProps} />
         )}
       </div>
+
+      <SavedToast tr={tr} language={language} />
     </>
   )
 }

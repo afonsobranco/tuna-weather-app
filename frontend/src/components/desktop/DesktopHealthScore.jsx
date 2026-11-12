@@ -12,9 +12,9 @@ export default function DesktopHealthScore({ data, tr }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
         <HealthRing score={health?.score ?? 0} size={64} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: FONT, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+          <h2 style={{ margin: '0 0 6px', fontFamily: FONT, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 1 }}>
             {tr.dailyHealthScore}
-          </div>
+          </h2>
           <div style={{ fontFamily: FONT, fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>
             {healthTip(health, tr)}
           </div>

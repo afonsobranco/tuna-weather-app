@@ -48,6 +48,7 @@ export default {
   alertToday: (t) => `${t} today`,
   alertTomorrow: (t) => `${t} tomorrow`,
   nwsEvents: {},
+  nwsLevels: {},
   wikipediaNewTab: "Wikipedia, opens in a new tab",
   readOnWikipedia: (t) => `Read “${t}” on Wikipedia (opens in a new tab)`,
   historyShowing: (n, date) => `${n} event${n === 1 ? '' : 's'} for ${date}`,
@@ -58,6 +59,8 @@ export default {
   sunHasSet: "Sun has set · sunrise in",
   healthWeight: (w) => `weight ${w}%`,
   healthPenalty: "Weather & warnings",
+  healthPenalties: { storm: "Thunderstorms", snow: "Snow & ice", rain: "Rain", cold: "Cold (feels like)", heat: "Heat (feels like)", alert: "Weather warning" },
+  aqiScale: "European index",
   healthTips: {
     alertRed:      'Severe weather warning in effect. Stay indoors and follow official advice.',
     alertOrange:   'Weather warning in effect. Avoid unnecessary trips outside.',
@@ -68,15 +71,18 @@ export default {
     perfect:       'Perfect outdoor conditions. Great day for activities.',
     goodSunscreen: 'Good day outside. Apply sunscreen around midday.',
     good:          'Good conditions outside. Enjoy some fresh air.',
-    aqiModerate:   'Moderate air quality. Sensitive groups should limit outdoor time.',
+    aqiModerate:   'Air quality is not great. Sensitive groups should limit outdoor time.',
     uvHigh:        'High UV. Stay in the shade during midday hours.',
     ok:            'Acceptable conditions. Stay hydrated.',
-    aqiPoor:       'Unhealthy air quality. Limit time outdoors; wear an N95 if you go out.',
+    aqiPoor:       'Very poor air quality. Limit time outdoors; wear an N95 if you go out.',
     challenging:   'Challenging conditions. Limit strenuous outdoor activity.',
     avoid:         'Avoid prolonged outdoor exposure today.',
     cold:          'Freezing out. Wrap up warm, cover hands and ears, and watch for ice.',
     heat:          'Very hot. Drink water, avoid the midday sun and take it easy.',
     calmNight:     'Calm night outside. Fine for an evening walk.',
+    calmDawn:      'Calm before dawn. Fine for an early walk; wear something bright.',
+    fog:           'Foggy out. Take care on the roads and wear something bright.',
+    alertSoon:     'Weather warning from later today. Check conditions before heading out.',
   },
   alertTitle: (level, type) => `${{ yellow: 'Yellow', orange: 'Orange', red: 'Red' }[level] || ''} ${type} warning`.trim(),
   alertTypes: {
@@ -142,8 +148,10 @@ export default {
 
   // Air quality classification labels
   aqiLabels: {
-    'Excellent': 'Excellent', 'Good': 'Good', 'Moderate': 'Moderate',
-    'Unhealthy': 'Unhealthy', 'Hazardous': 'Hazardous',
+    'Good': 'Good', 'Fair': 'Fair', 'Moderate': 'Moderate', 'Poor': 'Poor',
+    'Very Poor': 'Very poor', 'Extremely Poor': 'Extremely poor',
+    // older cached responses
+    'Excellent': 'Excellent', 'Unhealthy': 'Unhealthy', 'Hazardous': 'Hazardous',
   },
 
   // Compass wind directions

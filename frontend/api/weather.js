@@ -52,13 +52,15 @@ function uvLabel(val) {
   return ['Extreme', 'red']
 }
 
+// European Air Quality Index bands (EEA): the value shown is the European AQI
 function aqiLabel(val) {
   const v = Math.round(val)
-  if (v <= 20)  return ['Excellent', 'green']
-  if (v <= 40)  return ['Good',      'green']
-  if (v <= 80)  return ['Moderate',  'orange']
-  if (v <= 120) return ['Unhealthy', 'red']
-  return ['Hazardous', 'red']
+  if (v <= 20)  return ['Good',           'green']
+  if (v <= 40)  return ['Fair',           'green']
+  if (v <= 60)  return ['Moderate',       'orange']
+  if (v <= 80)  return ['Poor',           'orange']
+  if (v <= 100) return ['Very Poor',      'red']
+  return ['Extremely Poor', 'red']
 }
 
 // ─── Health score ─────────────────────────────────────────────────────────────
@@ -72,20 +74,23 @@ const HEALTH_TIPS_EN = {
   perfect:       'Perfect outdoor conditions. Great day for activities.',
   goodSunscreen: 'Good day outside. Apply sunscreen around midday.',
   good:          'Good conditions outside. Enjoy some fresh air.',
-  aqiModerate:   'Moderate air quality. Sensitive groups should limit outdoor time.',
+  aqiModerate:   'Air quality is not great. Sensitive groups should limit outdoor time.',
   uvHigh:        'High UV. Stay in the shade during midday hours.',
   ok:            'Acceptable conditions. Stay hydrated.',
-  aqiPoor:       'Unhealthy air quality. Limit time outdoors; wear an N95 if you go out.',
+  aqiPoor:       'Very poor air quality. Limit time outdoors; wear an N95 if you go out.',
   challenging:   'Challenging conditions. Limit strenuous outdoor activity.',
   avoid:         'Avoid prolonged outdoor exposure today.',
   cold:          'Freezing out. Wrap up warm, cover hands and ears, and watch for ice.',
   heat:          'Very hot. Drink water, avoid the midday sun and take it easy.',
   calmNight:     'Calm night outside. Fine for an evening walk.',
+  calmDawn:      'Calm before dawn. Fine for an early walk; wear something bright.',
+  fog:           'Foggy out. Take care on the roads and wear something bright.',
+  alertSoon:     'Weather warning from later today. Check conditions before heading out.',
 }
 
 const clamp100 = (v) => Math.max(0, Math.min(100, v))
 
-function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, feelsC = tempC, isDay, alertLevel }) {
+function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, feelsC = tempC, isDay, sunPhase, alertLevel, alertActive = true }) {
   const factors = [
     { key: 'uv',       weight: 25, score: clamp100(100 - uv * 9) },
     { key: 'aqi',      weight: 40, score: clamp100(100 - aqi * 0.6) },
@@ -105,31 +110,43 @@ function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, feelsC = te
   else if (wet)                                          { weather = 'rain';  penalty = 10 }
 
   // How it actually feels outside: freezing or very hot air costs points too
-  let thermal = null
-  if (feelsC <= -10)     { thermal = 'cold'; penalty += 20 }
-  else if (feelsC <= 0)  { thermal = 'cold'; penalty += 12 }
-  else if (feelsC <= 5)  { penalty += 6 }
-  else if (feelsC >= 38) { thermal = 'heat'; penalty += 20 }
-  else if (feelsC >= 32) { thermal = 'heat'; penalty += 10 }
+  // Each deduction is listed by reason in the breakdown
+  const penalties = []
+  if (weather) penalties.push({ key: weather, points: penalty })
+  let thermal = null, thermalPts = 0
+  if (feelsC <= -10)     { thermal = 'cold'; thermalPts = 20 }
+  else if (feelsC <= 0)  { thermal = 'cold'; thermalPts = 12 }
+  else if (feelsC <= 5)  { thermalPts = 6 }
+  else if (feelsC >= 38) { thermal = 'heat'; thermalPts = 20 }
+  else if (feelsC >= 32) { thermal = 'heat'; thermalPts = 10 }
+  if (thermalPts) penalties.push({ key: feelsC <= 5 ? 'cold' : 'heat', points: thermalPts })
+  penalty += thermalPts
 
   let score = Math.max(0, base - penalty)
+  const capped = score
   if (alertLevel === 'red')    score = Math.min(score, 30)
   if (alertLevel === 'orange') score = Math.min(score, 50)
   if (alertLevel === 'yellow') score = Math.min(score, 70)
+  if (capped > score) penalties.push({ key: 'alert', points: capped - score })
+  const fog = code === 45 || code === 48
 
   const [, aqiTone] = aqiLabel(aqi)
   const [, uvTone]  = uvLabel(uv)
+  // A warning that only starts later today gets "from later today", not "in effect"
+  const night = sunPhase === 'before' ? 'calmDawn' : 'calmNight'
   let tipKey
-  if (alertLevel === 'red')          tipKey = 'alertRed'
+  if (alertLevel && !alertActive && (alertLevel !== 'yellow' || !weather)) tipKey = 'alertSoon'
+  else if (alertLevel === 'red')     tipKey = 'alertRed'
   else if (alertLevel === 'orange')  tipKey = 'alertOrange'
   else if (weather === 'storm' || weather === 'snow') tipKey = weather
   else if (alertLevel === 'yellow')  tipKey = 'alertYellow'
   else if (weather)                  tipKey = weather
   else if (thermal)                  tipKey = thermal
+  else if (fog)                      tipKey = 'fog'
   // Air-quality tips follow the same bands as the AQI badge, so they never disagree
   else if (aqiTone === 'red')        tipKey = 'aqiPoor'
-  else if (score >= 85)              tipKey = isDay ? 'perfect' : 'calmNight'
-  else if (score >= 70)              tipKey = !isDay ? 'calmNight' : uv >= 3 ? 'goodSunscreen' : 'good'
+  else if (score >= 85)              tipKey = isDay ? 'perfect' : night
+  else if (score >= 70)              tipKey = !isDay ? night : uv >= 3 ? 'goodSunscreen' : 'good'
   else if (score >= 55) {
     if (aqiTone === 'orange')                             tipKey = 'aqiModerate'
     else if (isDay && ['orange', 'red'].includes(uvTone)) tipKey = 'uvHigh'
@@ -138,7 +155,7 @@ function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, feelsC = te
   else if (score >= 40)              tipKey = aqiTone === 'orange' ? 'aqiModerate' : 'challenging'
   else                               tipKey = 'avoid'
 
-  return { score, tipKey, tip: HEALTH_TIPS_EN[tipKey], factors, penalty: base - score }
+  return { score, tipKey, tip: HEALTH_TIPS_EN[tipKey], factors, penalty: base - score, penalties }
 }
 
 // ─── Misc helpers ─────────────────────────────────────────────────────────────
@@ -178,17 +195,27 @@ function normalize(s) {
 // turns "Lisboa" into a village in Mozambique. Take each language's top hit and keep the
 // larger city; on a tie the current language wins so the name matches what the user typed.
 async function geocodeCity(city, lang) {
+  // undefined = the geocoder answered "no match"; null = it failed
   const search = (l) =>
     fetchJson(`${GEOCODE_URL}?name=${encodeURIComponent(city)}&count=1&language=${l}&format=json`, { timeout: 6000, retries: 1 })
       .then(j => j.results?.[0]).catch(() => null)
   const order = lang === 'pt' ? ['pt', 'en'] : ['en', 'pt']
-  const results = (await Promise.all(order.map(search))).filter(Boolean)
+  const answers = await Promise.all(order.map(search))
+  const results = answers.filter(Boolean)
+  const definitelyNone = answers.every(a => a === undefined)
   if (results.length) {
     const r = results.reduce((best, x) => ((x.population || 0) > (best.population || 0) ? x : best))
     return { lat: r.latitude, lon: r.longitude, city: r.name, region: r.admin1 || '', country: r.country || '', countryCode: (r.country_code || '').toUpperCase() }
   }
-  const nom = await fetchJson(`${NOMINATIM_URL}?q=${encodeURIComponent(city)}&format=json&limit=1&addressdetails=1`,
-    { headers: { 'User-Agent': UA }, timeout: 6000 })
+  let nom
+  try {
+    nom = await fetchJson(`${NOMINATIM_URL}?q=${encodeURIComponent(city)}&format=json&limit=1&addressdetails=1`,
+      { headers: { 'User-Agent': UA }, timeout: 4000 })
+  } catch (err) {
+    // The main geocoder already said there's no such place; a slow fallback doesn't change that
+    if (definitelyNone) throw new Error(`City '${city}' not found.`)
+    throw err
+  }
   if (!nom.length) throw new Error(`City '${city}' not found.`)
   const r = nom[0], addr = r.address || {}
   const cc = (addr.country_code || '').toUpperCase()
@@ -330,10 +357,11 @@ async function fetchMeteoAlarmAlerts(countryCode, lat, lon, now) {
 async function fetchNwsAlerts(lat, lon) {
   const json = await fetchJson(`${NWS_ALERTS_URL}?point=${lat.toFixed(4)},${lon.toFixed(4)}`,
     { headers: { 'User-Agent': UA, Accept: 'application/geo+json' }, timeout: 3500 })
-  const levelFor = { Extreme: 'red', Severe: 'orange', Moderate: 'yellow', Minor: 'yellow' }
+  const levelFor = { Extreme: 'red', Severe: 'orange', Moderate: 'yellow', Minor: 'yellow', Unknown: 'yellow' }
+  const nowMs = Date.now()
   return (json.features || [])
     .map(f => f.properties || {})
-    .filter(p => levelFor[p.severity])
+    .filter(p => levelFor[p.severity] && new Date(p.ends || p.expires).getTime() > nowMs)
     .map(p => ({
       level: levelFor[p.severity], type: p.event,
       text: { en: { title: p.event, description: p.description || p.headline || '' } },
@@ -493,20 +521,27 @@ export default async function handler(req, res) {
     const [uvLbl, uvTone] = uvLabel(uvDay)
 
     const soon = now.getTime() + 12 * 3600 * 1000
-    const worstAlert = alerts
-      .filter(a => new Date(a.onset).getTime() <= soon)
-      .reduce((worst, a) => (LEVEL_RANK[a.level] > (LEVEL_RANK[worst] || 0) ? a.level : worst), null)
+    const worstOf = (list) => list.reduce((worst, a) => (LEVEL_RANK[a.level] > (LEVEL_RANK[worst] || 0) ? a.level : worst), null)
+    const worstAlert = worstOf(alerts.filter(a => new Date(a.onset).getTime() <= soon))
+    const worstActive = worstOf(alerts.filter(a => new Date(a.onset).getTime() <= now.getTime()))
 
     const precipNext12 = Math.max(0, ...hPrecip.slice(currIdx, currIdx + 12).filter(Number.isFinite))
     const health = healthScore({
       uv: isDay && (sun?.progress ?? 0) < 0.6 ? uvDay : uvCurr, aqi: aqiVal, humidity, wind: windSpd, tempC, feelsC: feels,
-      code: wmoCode, precip: precipNext12, isDay, alertLevel: worstAlert,
+      code: wmoCode, precip: precipNext12, isDay, sunPhase: sun?.phase, alertLevel: worstAlert,
+      alertActive: !!worstActive && LEVEL_RANK[worstActive] >= LEVEL_RANK[worstAlert],
     })
 
     const history = await historyPromise
 
     // A manual refresh must not be answered from the edge cache
-    res.setHeader('Cache-Control', params.has('fresh') ? 'no-store' : 's-maxage=300, stale-while-revalidate=600')
+    // ...nor outlive an alert's start or end, so a finished warning isn't served from cache
+    const nextChange = alerts.flatMap(a => [a.onset, a.expires])
+      .map(t => (new Date(t).getTime() - now.getTime()) / 1000)
+      .filter(sec => sec > 0)
+    const maxAge = Math.max(30, Math.floor(Math.min(300, ...nextChange)))
+    res.setHeader('Cache-Control', params.has('fresh') ? 'no-store'
+      : maxAge < 300 ? `s-maxage=${maxAge}` : 's-maxage=300, stale-while-revalidate=600')
     res.status(200).json({
       city: named.name, region: named.region, country: geo.country, countryCode: geo.countryCode, flag: countryFlag(geo.countryCode),
       lat, lon,

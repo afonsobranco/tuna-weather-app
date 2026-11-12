@@ -73,6 +73,16 @@ export default {
     'air quality alert': 'Alerta de qualidade do ar', 'wind chill warning': 'Aviso de frio extremo', 'wind chill advisory': 'Advertência de frio',
     'extreme cold warning': 'Aviso de frio extremo', 'extreme cold watch': 'Alerta de frio extremo', 'cold weather advisory': 'Advertência de frio',
     'winter weather statement': 'Comunicado de tempo invernal', 'avalanche warning': 'Aviso de avalanche',
+    'coastal flood warning': 'Aviso de inundação costeira', 'coastal flood watch': 'Alerta de inundação costeira',
+    'coastal flood advisory': 'Advertência de inundação costeira', 'coastal flood statement': 'Comunicado de inundação costeira',
+    'lakeshore flood warning': 'Aviso de inundação nas margens', 'lakeshore flood advisory': 'Advertência de inundação nas margens',
+    'high surf warning': 'Aviso de ondulação forte', 'high surf advisory': 'Advertência de ondulação forte',
+    'gale watch': 'Alerta de vento muito forte', 'storm warning': 'Aviso de tempestade marítima', 'storm watch': 'Alerta de tempestade marítima',
+    'heavy freezing spray warning': 'Aviso de borrifo gelado intenso', 'freezing spray advisory': 'Advertência de borrifo gelado',
+    'brisk wind advisory': 'Advertência de vento fresco', 'hard freeze warning': 'Aviso de geada forte', 'hard freeze watch': 'Alerta de geada forte',
+    'marine weather statement': 'Comunicado meteorológico marítimo', 'hydrologic outlook': 'Previsão hidrológica',
+    'dust storm warning': 'Aviso de tempestade de poeira', 'blowing dust advisory': 'Advertência de poeira',
+    'wind chill watch': 'Alerta de frio extremo', 'avalanche watch': 'Alerta de avalanche', 'snow squall warning': 'Aviso de rajadas de neve',
   },
 
   wikipediaNewTab: "Wikipédia, abre num novo separador",
@@ -85,6 +95,8 @@ export default {
   sunHasSet: "O sol já se pôs · nasce em",
   healthWeight: (w) => `peso ${w}%`,
   healthPenalty: "Tempo e avisos",
+  healthPenalties: { storm: "Trovoada", snow: "Neve e gelo", rain: "Chuva", cold: "Frio (sensação)", heat: "Calor (sensação)", alert: "Aviso meteorológico" },
+  aqiScale: "Índice europeu",
   healthTips: {
     alertRed:      'Aviso meteorológico grave em vigor. Fica em casa e segue as indicações oficiais.',
     alertOrange:   'Aviso meteorológico em vigor. Evita saídas desnecessárias.',
@@ -95,15 +107,18 @@ export default {
     perfect:       'Condições perfeitas para estar na rua. Ótimo dia para atividades.',
     goodSunscreen: 'Bom dia para sair. Usa protetor solar perto do meio-dia.',
     good:          'Boas condições lá fora. Aproveita o ar livre.',
-    aqiModerate:   'Qualidade do ar moderada. Grupos sensíveis devem limitar o tempo na rua.',
+    aqiModerate:   'Qualidade do ar pouco favorável. Grupos sensíveis devem limitar o tempo na rua.',
     uvHigh:        'UV elevado. Procura sombra nas horas centrais do dia.',
     ok:            'Condições aceitáveis. Mantém-te hidratado.',
-    aqiPoor:       'Qualidade do ar prejudicial. Limita o tempo na rua; usa máscara FFP2 se saíres.',
+    aqiPoor:       'Qualidade do ar muito má. Limita o tempo na rua; usa máscara FFP2 se saíres.',
     challenging:   'Condições difíceis. Limita o esforço físico ao ar livre.',
     avoid:         'Evita estar muito tempo na rua hoje.',
     cold:          'Está gelado. Agasalha-te bem, protege mãos e orelhas e cuidado com o gelo.',
     heat:          'Muito calor. Bebe água, evita o sol do meio-dia e vai com calma.',
     calmNight:     'Noite calma. Boa para um passeio ao fim do dia.',
+    calmDawn:      'Madrugada calma. Boa para um passeio cedo; veste algo claro.',
+    fog:           'Nevoeiro. Cuidado na estrada e veste algo claro.',
+    alertSoon:     'Aviso meteorológico para mais logo. Confirma as condições antes de saíres.',
   },
   alertTitle: (level, type) => `Aviso ${{ yellow: 'amarelo', orange: 'laranja', red: 'vermelho' }[level] || ''} de ${type}`.replace('  ', ' '),
   alertTypes: {
@@ -169,14 +184,18 @@ export default {
 
   // Classificação da qualidade do ar
   aqiLabels: {
-    'Excellent': 'Excelente', 'Good': 'Bom', 'Moderate': 'Moderado',
-    'Unhealthy': 'Prejudicial', 'Hazardous': 'Perigoso',
+    'Good': 'Bom', 'Fair': 'Razoável', 'Moderate': 'Moderado', 'Poor': 'Mau',
+    'Very Poor': 'Muito mau', 'Extremely Poor': 'Extremamente mau',
+    // respostas antigas em cache
+    'Excellent': 'Excelente', 'Unhealthy': 'Prejudicial', 'Hazardous': 'Perigoso',
   },
 
   // Direções do vento (rosa dos ventos em PT)
   windDirs: { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SO', W: 'O', NW: 'NO' },
 
   // Abreviações dos dias da semana
+  // Any other US event: translate its level word and keep the rest in English
+  nwsLevels: { warning: 'Aviso', watch: 'Alerta', advisory: 'Advertência', statement: 'Comunicado', alert: 'Alerta', outlook: 'Previsão' },
   daysLong: { Mon: 'Segunda-feira', Tue: 'Terça-feira', Wed: 'Quarta-feira', Thu: 'Quinta-feira', Fri: 'Sexta-feira', Sat: 'Sábado', Sun: 'Domingo' },
   days: { Mon: 'Seg', Tue: 'Ter', Wed: 'Qua', Thu: 'Qui', Fri: 'Sex', Sat: 'Sáb', Sun: 'Dom' },
 

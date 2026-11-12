@@ -56,7 +56,10 @@ export default function HealthDashboard({ data, unit, tr }) {
             </span>
             <Tone tone={aqi?.tone || 'green'}>{tr?.aqiLabels?.[aqi?.label] || aqi?.label || '—'}</Tone>
           </div>
-          <ProgressBar value={aqi?.value ?? 0} max={200} color={toneColors(aqi?.tone).dot} />
+          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.88)', marginTop: -4, marginBottom: 6 }}>
+            {tr.aqiScale}
+          </div>
+          <ProgressBar value={aqi?.value ?? 0} max={120} color={toneColors(aqi?.tone).dot} />
         </Glass>
       </div>
 

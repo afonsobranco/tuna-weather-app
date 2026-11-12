@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { useNow } from './hooks/useNow'
 import { useAppStore } from './context/AppContext'
 import { useWeather } from './hooks/useWeather'
 import { useGeolocation } from './hooks/useGeolocation'
@@ -27,6 +28,21 @@ export default function App() {
   const { data, isLoading, error, notFound, failed, failReason, isStale, isSwitching, refetch } = useWeather(activePlace, language)
 
   useEffect(() => { document.documentElement.lang = language }, [language])
+
+  // Alerts that have ended since the data was fetched (cached copies included) are hidden
+  // at once, and the data is refreshed so the health score and tip catch up
+  const minute = useNow(60000)
+  const view = useMemo(() => {
+    if (!data?.alerts?.length) return data
+    const alerts = data.alerts.filter((a) => !a.expires || new Date(a.expires).getTime() > Date.now())
+    return alerts.length === data.alerts.length ? data : { ...data, alerts }
+  }, [data, minute])
+  const expiredRefreshRef = useRef(null)
+  useEffect(() => {
+    if (view === data || isLoading || expiredRefreshRef.current === data?.fetchedAt) return
+    expiredRefreshRef.current = data?.fetchedAt
+    refetch(true)
+  }, [view, data, isLoading])
 
   // Saved cities from before places had coordinates: resolve each once
   useEffect(() => {
@@ -136,7 +152,7 @@ export default function App() {
     || (isSwitching ? { status: 'loading', query: activePlace.name } : null)
 
   const commonProps = {
-    data,
+    data: view,
     isLoading,
     error,
     isStale,

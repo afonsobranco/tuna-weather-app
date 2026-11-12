@@ -7,8 +7,12 @@ import { countryName } from '../../utils/i18nUtils'
 
 const FONT = '"Geist", system-ui, sans-serif'
 
-export function SearchStatus({ status, tr, onRetry, style }) {
-  if (!status) return null
+// Echo at most ~40 characters of what was typed
+const shortQuery = (q = '') => { const c = [...q]; return c.length > 40 ? `${c.slice(0, 40).join('')}…` : q }
+
+export function SearchStatus({ status: raw, tr, onRetry, style }) {
+  if (!raw) return null
+  const status = { ...raw, query: shortQuery(raw.query) }
   const isError = status.status === 'error' || status.status === 'failed'
   const message = status.status === 'failed'
     ? (status.reason === 'server' ? tr.searchFailedServer(status.query) : tr.searchFailed(status.query))
@@ -29,7 +33,7 @@ export function SearchStatus({ status, tr, onRetry, style }) {
       {isError
         ? <span aria-hidden style={{ fontSize: 12 }}>⚠</span>
         : <span aria-hidden className="tuna-spinner" />}
-      <span>{message}</span>
+      <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{message}</span>
       {status.status === 'failed' && onRetry && (
         <button
           type="button"

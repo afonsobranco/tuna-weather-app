@@ -190,6 +190,7 @@ export default function DesktopHero({
           value={data.aqi?.value ?? 0}
           tone={tr?.aqiLabels?.[data.aqi?.label] || data.aqi?.label}
           toneTone={data.aqi?.tone}
+          caption={tr.aqiScale}
         />
         <MetricCell
           icon={null}

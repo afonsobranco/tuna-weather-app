@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 const LEVEL_COLORS = {
   // Dark translucent base so pills stay legible on bright sunset/sunny backgrounds
@@ -34,9 +34,15 @@ function pickText(alert, lang, tr) {
   const src = texts[textLang] || { title: alert.type, description: '' }
   const typeName = tr.alertTypes?.[(alert.type || '').toLowerCase()]
   const known = tr.nwsEvents?.[(src.title || '').toLowerCase()]
-  const title = typeName ? tr.alertTitle(alert.level, typeName) : (known || src.title || '')
+  let title = typeName ? tr.alertTitle(alert.level, typeName) : (known || src.title || '')
+  // An unlisted US event ("Coastal Flood Statement") still gets its level word translated:
+  // "Comunicado: Coastal Flood", with the untranslated part tagged as English
+  let prefix = ''
+  const m = !typeName && !known && textLang !== lang && title.match(/^(.*\S)\s+(warning|watch|advisory|statement|alert|outlook)$/i)
+  if (m && tr.nwsLevels?.[m[2].toLowerCase()]) { prefix = `${tr.nwsLevels[m[2].toLowerCase()]}: `; title = m[1] }
   return {
-    title: title ? title.charAt(0).toUpperCase() + title.slice(1) : '',
+    prefix,
+    title: title && !prefix ? title.charAt(0).toUpperCase() + title.slice(1) : title,
     // An agency title we couldn't translate stays in its own language
     titleLang: typeName || known ? lang : (textLang || lang),
     // US bulletins arrive hard-wrapped at ~70 characters: join lines, keep paragraph breaks
@@ -47,6 +53,7 @@ function pickText(alert, lang, tr) {
 
 export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
   const [open, setOpen] = useState(null)
+  const panelId = useId()
   if (!alerts?.length) return null
 
   const locale = tr?.locale || 'en-GB'
@@ -59,7 +66,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         {alerts.map((a, i) => {
           const c = LEVEL_COLORS[a.level] || LEVEL_COLORS.yellow
-          const { title, titleLang } = pickText(a, lang, tr)
+          const { prefix, title, titleLang } = pickText(a, lang, tr)
           const isOpen = open === i
           const active = new Date(a.onset).getTime() <= now
           const when = active
@@ -74,6 +81,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
               type="button"
               onClick={() => setOpen(isOpen ? null : i)}
               aria-expanded={isOpen}
+              aria-controls={isOpen ? panelId : undefined}
               style={{
                 display: 'inline-flex', alignItems: 'baseline', gap: 7,
                 padding: small ? '11px 13px' : '8px 13px', minHeight: small ? 44 : 34,
@@ -88,7 +96,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
             >
               <span style={{ fontSize: small ? 12 : 13, color: c.fg, flexShrink: 0 }} aria-hidden>⚠</span>
               <span style={stacked ? { display: 'flex', flexDirection: 'column', gap: 2 } : undefined}>
-                <span lang={titleLang !== lang ? titleLang : undefined} style={{ fontWeight: 600 }}>{title}</span>{stacked ? null : ' '}
+                <span style={{ fontWeight: 600 }}>{prefix}<span lang={titleLang !== lang ? titleLang : undefined}>{title}</span></span>{stacked ? null : ' '}
                 <span style={{ color: 'rgba(255,255,255,0.75)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{stacked ? when : `· ${when}`}</span>
               </span>
             </button>
@@ -99,9 +107,9 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
       {open !== null && alerts[open] && (() => {
         const a = alerts[open]
         const c = LEVEL_COLORS[a.level] || LEVEL_COLORS.yellow
-        const { description, textLang } = pickText(a, lang, tr)
+        const { prefix, title, titleLang, description, textLang } = pickText(a, lang, tr)
         return (
-          <div style={{
+          <div id={panelId} role="region" aria-label={`${prefix}${title}`} style={{
             padding: small ? '10px 12px' : '12px 14px',
             borderRadius: 14,
             background: 'rgba(10,15,28,0.7)',
@@ -112,6 +120,9 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
             color: 'rgba(255,255,255,0.85)',
             maxWidth: 560,
           }}>
+            <div style={{ fontWeight: 600, color: c.fg, marginBottom: description ? 4 : 0 }}>
+              {prefix}<span lang={titleLang !== lang ? titleLang : undefined}>{title}</span>
+            </div>
             {description && <div lang={textLang !== lang ? textLang : undefined} style={{ whiteSpace: 'pre-line' }}>{description}</div>}
             <div style={{ marginTop: description ? 6 : 0, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>
               {tr.alertSource}:{' '}

@@ -54,12 +54,15 @@ export function HealthBreakdown({ health, tr }) {
           <ProgressBar value={f.score} color={ringColor(f.score)} />
         </div>
       ))}
-      {health?.penalty > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FONT, fontSize: 12, marginTop: 4 }}>
-          <span style={{ color: 'rgba(255,255,255,0.8)' }}>{tr.healthPenalty}</span>
-          <span style={{ color: '#FF9B9B', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>−{health.penalty}</span>
-        </div>
-      )}
+      {/* Each deduction with its reason ("Cold (feels like) −12"); older responses only have a total */}
+      {(health?.penalties?.length ? health.penalties : health?.penalty > 0 ? [{ key: null, points: health.penalty }] : [])
+        .filter((p) => p.points > 0)
+        .map((p, i) => (
+          <div key={p.key || i} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: FONT, fontSize: 12, marginTop: 4 }}>
+            <span style={{ color: 'rgba(255,255,255,0.8)' }}>{(p.key && tr.healthPenalties?.[p.key]) || tr.healthPenalty}</span>
+            <span style={{ color: '#FF9B9B', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>−{p.points}</span>
+          </div>
+        ))}
     </div>
   )
 }

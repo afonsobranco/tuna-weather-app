@@ -8,7 +8,7 @@ export default function TomorrowTile({ data, unit, tr }) {
 
   const tomorrow = data.forecast[1]
   const iconKind = tomorrow?.i || 'partly'
-  const condition = tomorrowCondition(iconKind, tr)
+  const condition = tomorrowCondition(iconKind, tr, tomorrow.hi)
   const hi = T(tomorrow.hi, unit)
   const lo = T(tomorrow.lo, unit)
 

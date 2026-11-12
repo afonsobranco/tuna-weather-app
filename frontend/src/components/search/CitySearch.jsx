@@ -10,7 +10,8 @@ const FONT = '"Geist", system-ui, sans-serif'
 export function SearchStatus({ status, tr, onRetry, style }) {
   if (!status) return null
   const isError = status.status === 'error' || status.status === 'failed'
-  const message = status.status === 'failed' ? tr.searchFailed(status.query)
+  const message = status.status === 'failed'
+    ? (status.reason === 'server' ? tr.searchFailedServer(status.query) : tr.searchFailed(status.query))
     : status.status === 'error' ? tr.searchNotFound(status.query)
     : status.status === 'retrying' ? tr.searchRetrying(status.query)
     : tr.searchLoading(status.query)
@@ -32,7 +33,12 @@ export function SearchStatus({ status, tr, onRetry, style }) {
       {status.status === 'failed' && onRetry && (
         <button
           type="button"
-          onClick={onRetry}
+          onClick={(e) => {
+            // The button disappears on retry; keep keyboard focus in the search box
+            const input = e.currentTarget.closest('[data-search-root]')?.querySelector('input[role=combobox]')
+            onRetry()
+            input?.focus()
+          }}
           style={{
             marginLeft: 'auto', flexShrink: 0, minHeight: 32, padding: '4px 12px', borderRadius: 999,
             background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.3)',
@@ -79,6 +85,12 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
     if (open && activeIndex >= 0 && suggestions[activeIndex]) return pick(suggestions[activeIndex])
     const text = query.trim()
     if (!text) return
+    // The list already says nothing matches: don't let the server guess an unrelated place
+    if (open && suggestions.length === 0 && text.length >= 2) {
+      search.close()
+      onSearch({ name: text, noMatch: true })
+      return
+    }
     search.reset()
     onSearch({ name: text })
   }
@@ -121,13 +133,20 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
         </form>
       </Glass>
 
+      <span role="status" aria-live="polite" className="sr-only">
+        {showList ? (suggestions.length ? tr.suggestionsCount(suggestions.length) : tr.noMatches) : ''}
+      </span>
+
       {showList && (
         <div
           id={listId}
           role="listbox"
           aria-label={tr.searchPlaceholder}
           style={{
-            position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+            // On mobile the box shares its row with the unit and language buttons; let the
+            // list use the full screen width so suggestions don't wrap
+            position: 'absolute', top: '100%', left: 0, zIndex: 100,
+            ...(small ? { right: 0 } : { width: 'calc(100vw - 32px)' }),
             marginTop: 6, borderRadius: 14, overflow: 'hidden',
             background: 'rgba(10,25,50,0.96)',
             backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
@@ -147,7 +166,7 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
               aria-selected={i === activeIndex}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => pick(s)}
-              onMouseEnter={() => search.setActiveIndex(i)}
+              onMouseMove={() => i !== activeIndex && search.setActiveIndex(i)}
               style={{
                 cursor: 'pointer', padding: '11px 14px', minHeight: 44, boxSizing: 'border-box',
                 borderTop: i ? '1px solid rgba(255,255,255,0.08)' : 'none',

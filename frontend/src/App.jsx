@@ -23,7 +23,7 @@ export default function App() {
   const { place: geoPlace, status: geoStatus } = useGeolocation()
   // Never wait on a slow GPS lock: requested place, else GPS, else Lisbon
   const activePlace = requestedPlace || geoPlace || DEFAULT_PLACE
-  const { data, isLoading, error, notFound, failed, isStale, isSwitching, refetch } = useWeather(activePlace, language)
+  const { data, isLoading, error, notFound, failed, failReason, isStale, isSwitching, refetch } = useWeather(activePlace, language)
 
   useEffect(() => { document.documentElement.lang = language }, [language])
 
@@ -43,6 +43,11 @@ export default function App() {
     setSearchError((s) => (s?.status === 'retrying' ? null : s))
     const resolved = placeFromData(data)
     setCityTemp(resolved, data.tempC)
+    // Remember this saved city's name in the current language, and its region
+    const saved = savedCities.find((p) => samePlace(p, resolved))
+    if (saved && data.lang && (saved.names?.[data.lang] !== data.city || (!saved.region && data.region))) {
+      upgradeSavedCity(saved, { ...saved, names: { ...saved.names, [data.lang]: data.city }, region: saved.region || data.region || '' })
+    }
     if (requestedPlace) {
       setLastCity(resolved)
       const nameOnly = savedCities.find((p) => !hasCoords(p) && samePlace(p, requestedPlace))
@@ -66,12 +71,16 @@ export default function App() {
     if (!failed || isLoading) return
     userSearchRef.current = false
     if (!lastGoodRef.current) return // nothing to show yet: the layouts render the offline state
-    setSearchError({ status: 'failed', query: activePlace.name, place: activePlace })
+    setSearchError({ status: 'failed', reason: failReason, query: activePlace.name, place: activePlace })
     if (placeKey(lastGoodRef.current) !== placeKey(activePlace)) setRequestedPlace(lastGoodRef.current)
   }, [failed, isLoading])
 
   const handleSearch = (place, keepStatus = false) => {
     if (!place?.name?.trim()) return
+    if (place.noMatch) {
+      setSearchError({ status: 'error', query: place.name.trim() })
+      return
+    }
     userSearchRef.current = true
     if (!keepStatus) setSearchError(null)
     const next = { ...place, name: place.name.trim() }

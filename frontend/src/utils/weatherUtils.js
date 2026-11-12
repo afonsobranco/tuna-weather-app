@@ -18,6 +18,13 @@ export const WARM_GLASS = {
 
 export const WARM_STATES = ['sunset', 'clear-day']
 
+// Cards on the blue clear-day sky get a deeper tint so they separate from the sky
+export function skyVars(state) {
+  if (state === 'clear-day') return { ...WARM_GLASS, '--glass-bg': 'rgba(6,16,44,0.42)' }
+  if (state === 'sunset') return WARM_GLASS
+  return {}
+}
+
 // Readability scrim per sky. Sunset's orange horizon needs a heavy one; the blue
 // clear-day sky only needs a light navy wash to keep 88%-white text above 4.5:1.
 export function skyScrim(state) {
@@ -43,7 +50,7 @@ export function toneColors(tone) {
 
 // WMO code → tomorrow tile condition
 // tr is optional — if provided, labels/tips are translated
-export function tomorrowCondition(iconKind, tr) {
+export function tomorrowCondition(iconKind, tr, hiC) {
   const icons = {
     rain:  { icon: 'rain',   accent: '#6FA8E8' },
     storm: { icon: 'storm',  accent: '#FFCB45' },
@@ -59,8 +66,13 @@ export function tomorrowCondition(iconKind, tr) {
     moon:  { label: 'Clear',          tip: 'Crisp start' },
   }
   const defaultEnglish = { label: 'Clear & cool', tip: 'Great for a run' }
-  const baseIcon = icons[iconKind] || { icon: 'partly', accent: '#FFD18A' }
-  const translated = (tr?.tomorrowConditions?.[iconKind]) || (tr?.tomorrowConditions?.default) || englishLabels[iconKind] || defaultEnglish
+  const baseIcon = icons[iconKind] || { icon: iconKind === 'sun' ? 'sun' : 'partly', accent: '#FFD18A' }
+  // Fair-weather wording depends on how warm it will be ("Clear & cool" at 32° reads wrong)
+  let key = iconKind
+  if (!icons[iconKind] || iconKind === 'moon') {
+    key = hiC >= 28 ? 'hot' : hiC <= 8 ? 'cold' : iconKind === 'moon' ? 'moon' : 'default'
+  }
+  const translated = (tr?.tomorrowConditions?.[key]) || (tr?.tomorrowConditions?.default) || englishLabels[key] || defaultEnglish
   return { ...baseIcon, label: translated.label, tip: translated.tip }
 }
 
@@ -76,4 +88,11 @@ export function heroIconKind(data) {
   if (code === 2) return night ? 'mooncloud' : 'partly'
   if (code === 0 || code === 1) return night ? 'moon' : 'sun'
   return night ? 'moon' : 'partly'
+}
+
+// The sun/moon sit behind the content; fade them as cards scroll over them so they
+// don't glow through the glass. Sets a CSS variable instead of re-rendering.
+export function fadeSkyDecor(e) {
+  const root = e.currentTarget.closest('[data-sky-root]')
+  root?.style.setProperty('--sky-decor', String(Math.max(0, 1 - e.currentTarget.scrollTop / 140)))
 }

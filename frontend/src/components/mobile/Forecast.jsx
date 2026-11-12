@@ -51,6 +51,10 @@ export default function Forecast({ data, unit, tr, selectedIdx = 0, onSelect }) 
             >
             <Glass
               style={{
+                backdropFilter: 'none',
+                WebkitBackdropFilter: 'none',
+                // Scrollers clip outer shadows into a hard-edged band (and blur into a box); keep the inner highlight
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22)',
                 padding: '12px 8px',
                 textAlign: 'center',
                 background: isSelected ? 'rgba(8,12,30,0.42)' : undefined,

@@ -24,17 +24,17 @@ export default function HealthDashboard({ data, unit, tr }) {
         <Glass style={{ flex: 1, padding: '14px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
             <GUV size={13} color="rgba(255,255,255,0.5)" />
-            <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+            <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
               {tr.uvIndex}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, rowGap: 4, marginBottom: 8 }}>
             <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 28, fontWeight: 500, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
               {formatNumber(uv?.value ?? 0, tr.locale)}
             </span>
             <Tone tone={uv?.tone || 'green'}>{tr?.uvLabels?.[uv?.label] || uv?.label || '—'}</Tone>
           </div>
-          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: -4, marginBottom: 6 }}>
+          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.88)', marginTop: -4, marginBottom: 6 }}>
             {tr.uvPeak}
           </div>
           <ProgressBar value={uv?.value ?? 0} max={11} color="#ffa850" />
@@ -44,11 +44,11 @@ export default function HealthDashboard({ data, unit, tr }) {
         <Glass style={{ flex: 1, padding: '14px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
             <GLeaf size={13} color="rgba(255,255,255,0.5)" />
-            <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+            <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
               {tr.airQuality}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, rowGap: 4, marginBottom: 8 }}>
             <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 28, fontWeight: 500, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
               {aqi?.value ?? 0}
             </span>
@@ -61,17 +61,17 @@ export default function HealthDashboard({ data, unit, tr }) {
       {/* Wind + Humidity row */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
         <Glass style={{ flex: 1, padding: '12px 14px' }}>
-          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>
+          <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>
             {tr.wind}
           </div>
           <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 22, fontWeight: 500, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
-            {windDisplay(windSpeed, unit).value} <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.7)' }}>{windDisplay(windSpeed, unit).label} {tr?.windDirs?.[data.windDir] || data.windDir || ''}</span>
+            {windDisplay(windSpeed, unit).value} <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.88)' }}>{windDisplay(windSpeed, unit).label} {tr?.windDirs?.[data.windDir] || data.windDir || ''}</span>
           </div>
         </Glass>
         <Glass style={{ flex: 1, padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
             <GDrop size={12} color="rgba(255,255,255,0.5)" />
-            <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+            <span style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
               {tr.humidity}
             </span>
           </div>

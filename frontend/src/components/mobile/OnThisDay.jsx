@@ -1,8 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import Glass from '../primitives/Glass'
 import { GExternal } from '../icons/UIGlyphs'
-import { API_BASE } from '../../utils/api'
-import { placeKey } from '../../utils/place'
+import { useOnThisDay } from '../../hooks/useOnThisDay'
+import HistoryDateInput, { HistoryLoader } from '../history/HistoryDateInput'
 
 const GRAIN_STYLE = {
   position: 'absolute',
@@ -19,62 +19,9 @@ const GRAIN_STYLE = {
 
 export default function OnThisDay({ data, tr, language }) {
   const [expanded, setExpanded] = useState(false)
-  const today = data?.localDate || ''
-  const [selectedDate, setSelectedDate] = useState(today)
-  const [picked, setPicked] = useState(null) // { date, loading, history } for a non-today date
-  const requestRef = useRef(0)
-  const cardRef = useRef(null)
-  const lastHeightRef = useRef(0) // card height while showing events, held while loading
-
-  const loadDate = async (value) => {
-    const id = ++requestRef.current
-    if (!value || value.slice(5) === today.slice(5)) { setPicked(null); return }
-    setPicked({ date: value, loading: true, history: [] })
-    const params = new URLSearchParams({ date: value.slice(5), city: data.city, cc: data.countryCode || '', lang: language })
-    let history = []
-    try {
-      const res = await fetch(`${API_BASE}/history?${params}`)
-      history = (await res.json()).history || []
-    } catch {}
-    if (id === requestRef.current) setPicked({ date: value, loading: false, history })
-  }
-
-  // New place: back to its today. Compare rounded coordinates, since the same city can come
-  // back with slightly different precision (Tokyo 139.69171 vs 139.6917) or another name.
-  const place = data ? placeKey({ lat: data.lat, lon: data.lon }) : ''
-  useEffect(() => {
-    setSelectedDate(today)
-    setPicked(null)
-    requestRef.current++
-  }, [today, place])
-
-  // Same place in another language: keep the picked date and reload it once, when the
-  // data in the new language (and its localized city name) has arrived
-  const dataLang = data?.lang ?? language
-  useEffect(() => {
-    if (dataLang === language && selectedDate && selectedDate !== today) loadDate(selectedDate)
-  }, [dataLang, language])
-
-  // Between a language switch and the localized data arriving, the events on screen are
-  // in the old language: show the loader (at the same height) instead
-  const awaitingLang = dataLang !== language
-
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value)
-    setExpanded(false)
-    loadDate(e.target.value)
-  }
-
-  const loading = !!picked?.loading || awaitingLang
-
-  // Remember the height while events are shown, so the loader can hold it (no page jump)
-  useLayoutEffect(() => {
-    if (!loading && cardRef.current) lastHeightRef.current = Math.max(0, cardRef.current.offsetHeight - 12) // minus wrapper padding
-  })
-  const minHeight = lastHeightRef.current
+  const { selectedDate, onDateChange, loading, history, cardRef, holdHeight } = useOnThisDay(data, language, 12)
 
   if (!data) return null
-  const history = picked ? picked.history : data.history || []
   const visible = expanded ? history : history.slice(0, 1)
   const remaining = history.length - 1
 
@@ -82,7 +29,7 @@ export default function OnThisDay({ data, tr, language }) {
     <div ref={cardRef} style={{ padding: '0 16px 12px' }}>
       <Glass
         antique
-        style={{ padding: '18px 18px 16px', minHeight: loading ? minHeight : undefined }}
+        style={{ padding: '18px 18px 16px', minHeight: holdHeight }}
       >
         {/* Grain overlay */}
         <div style={GRAIN_STYLE} />
@@ -102,36 +49,12 @@ export default function OnThisDay({ data, tr, language }) {
             {tr.onThisDay}
           </h2>
 
-          {/* Date picker */}
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={handleDateChange}
-            aria-label={tr.pickDate}
-            className="date-input"
-            style={{
-              background: 'rgba(220,190,140,0.15)',
-              border: '1px solid rgba(220,190,140,0.3)',
-              borderRadius: 8,
-              padding: '8px 10px',
-              minHeight: 44,
-              color: 'rgba(255,240,200,0.9)',
-              fontFamily: '"Geist", system-ui, sans-serif',
-              fontSize: 11,
-              cursor: 'pointer',
-              colorScheme: 'dark',
-            }}
-          />
+          <HistoryDateInput value={selectedDate} onChange={(v) => { setExpanded(false); onDateChange(v) }} tr={tr} />
         </div>
 
         {/* Events */}
         <div style={{ position: 'relative' }} aria-live="polite" aria-busy={loading}>
-          {(loading || history.length === 0) && (
-            <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 13, color: 'rgba(255,240,200,0.75)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              {loading && <span aria-hidden className="tuna-spinner" />}
-              {loading ? tr.historyLoading : tr.historyEmpty}
-            </div>
-          )}
+          <HistoryLoader loading={loading} empty={history.length === 0} tr={tr} />
           {!loading && visible.map((event, idx) => (
             <div
               key={idx}
@@ -220,7 +143,7 @@ export default function OnThisDay({ data, tr, language }) {
               padding: '6px 14px',
               fontFamily: '"Geist", system-ui, sans-serif',
               fontSize: 12,
-              color: 'rgba(255,230,180,0.75)',
+              color: 'rgba(255,230,180,0.92)',
               cursor: 'pointer',
               minHeight: 44,
               display: 'flex',

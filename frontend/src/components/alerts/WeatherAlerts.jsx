@@ -17,8 +17,13 @@ function formatWhen(iso, timezone, locale) {
   }
 }
 
-function pickText(alert, lang) {
-  const text = alert.text[lang] || alert.text.en || Object.values(alert.text)[0] || { title: alert.type, description: '' }
+function pickText(alert, lang, tr) {
+  // No text in the app's language (e.g. a German-only DWD warning): build the title from
+  // the warning's level and type, and fall back to English or the source for the details
+  const own = alert.text[lang]
+  const typeName = tr.alertTypes?.[(alert.type || '').toLowerCase()]
+  const fallback = alert.text.en || Object.values(alert.text)[0] || { title: alert.type, description: '' }
+  const text = own || (typeName ? { ...fallback, title: tr.alertTitle(alert.level, typeName) } : fallback)
   // Some agencies (e.g. DWD) send lowercase event names like "fog"
   return { ...text, title: text.title ? text.title.charAt(0).toUpperCase() + text.title.slice(1) : '' }
 }
@@ -37,7 +42,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         {alerts.map((a, i) => {
           const c = LEVEL_COLORS[a.level] || LEVEL_COLORS.yellow
-          const { title } = pickText(a, lang)
+          const { title } = pickText(a, lang, tr)
           const isOpen = open === i
           const active = new Date(a.onset).getTime() <= now
           const when = active
@@ -74,7 +79,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
       {open !== null && alerts[open] && (() => {
         const a = alerts[open]
         const c = LEVEL_COLORS[a.level] || LEVEL_COLORS.yellow
-        const { description } = pickText(a, lang)
+        const { description } = pickText(a, lang, tr)
         return (
           <div style={{
             padding: small ? '10px 12px' : '12px 14px',

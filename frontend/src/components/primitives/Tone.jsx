@@ -16,6 +16,7 @@ export default function Tone({ tone, children }) {
         fontWeight: 600,
         fontSize: 11.5,
         letterSpacing: 0.2,
+        whiteSpace: 'nowrap',
         textTransform: 'uppercase',
         fontFamily: '"Geist", system-ui, sans-serif',
       }}

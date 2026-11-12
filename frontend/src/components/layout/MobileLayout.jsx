@@ -11,7 +11,7 @@ import MobileHourlyStrip from '../mobile/MobileHourlyStrip'
 import WeatherAlerts from '../alerts/WeatherAlerts'
 import SkeletonLoader from '../states/SkeletonLoader'
 import EmptyState from '../states/EmptyStates'
-import { WARM_GLASS, WARM_STATES, skyScrim } from '../../utils/weatherUtils'
+import { fadeSkyDecor, skyScrim, skyVars } from '../../utils/weatherUtils'
 
 export default function MobileLayout({
   data,
@@ -59,11 +59,11 @@ export default function MobileLayout({
   }
 
   return (
-    <div style={{
+    <div data-sky-root style={{
       position: 'relative', width: '100%', height: '100%',
       overflow: 'hidden', color: '#fff',
       fontFamily: '"Geist", system-ui, -apple-system, sans-serif',
-      ...(WARM_STATES.includes(weatherState) ? WARM_GLASS : {}),
+      ...skyVars(weatherState),
     }}>
       {/* Dynamic background */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -79,6 +79,7 @@ export default function MobileLayout({
       {/* Scrollable content */}
       <div
         className="hide-scroll"
+        onScroll={fadeSkyDecor}
         style={{
           position: 'relative', zIndex: 2,
           height: '100%', overflowY: 'auto',

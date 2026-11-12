@@ -171,22 +171,37 @@ async function geocodeCity(city, lang) {
   const results = (await Promise.all(order.map(search))).filter(Boolean)
   if (results.length) {
     const r = results.reduce((best, x) => ((x.population || 0) > (best.population || 0) ? x : best))
-    return { lat: r.latitude, lon: r.longitude, city: r.name, country: r.country || '', countryCode: (r.country_code || '').toUpperCase() }
+    return { lat: r.latitude, lon: r.longitude, city: r.name, region: r.admin1 || '', country: r.country || '', countryCode: (r.country_code || '').toUpperCase() }
   }
   const nom = await fetchJson(`${NOMINATIM_URL}?q=${encodeURIComponent(city)}&format=json&limit=1&addressdetails=1`,
     { headers: { 'User-Agent': UA }, timeout: 6000 })
   if (!nom.length) throw new Error(`City '${city}' not found.`)
   const r = nom[0], addr = r.address || {}
-  return { lat: parseFloat(r.lat), lon: parseFloat(r.lon), city: addr.city || addr.town || addr.village || city, country: addr.country || '', countryCode: (addr.country_code || '').toUpperCase() }
+  const cc = (addr.country_code || '').toUpperCase()
+  // Nominatim answers in the place's own script ("Polska"); use the app's language instead
+  let country = addr.country || ''
+  try { country = new Intl.DisplayNames([lang], { type: 'region' }).of(cc) || country } catch {}
+  return { lat: parseFloat(r.lat), lon: parseFloat(r.lon), city: addr.city || addr.town || addr.village || city, region: addr.state || '', country, countryCode: cc }
 }
 
-async function localizedName(name, lat, lon, lang) {
+const GEOCODE_GET_URL = 'https://geocoding-api.open-meteo.com/v1/get'
+
+// Name and region of a picked place in the requested language. The stored name may be in
+// the other language ("Viena" while asking for English), so if searching it in `lang` finds
+// nothing at these coordinates, find it via the other language and fetch it by id.
+async function localizedPlace(name, lat, lon, lang) {
+  const near = (r) => Math.abs(r.latitude - lat) < 0.1 && Math.abs(r.longitude - lon) < 0.1
+  const search = (l) => fetchJson(`${GEOCODE_URL}?name=${encodeURIComponent(name)}&count=10&language=${l}&format=json`, { timeout: 2500 })
+    .then(j => (j.results || []).find(near)).catch(() => null)
   try {
-    const json = await fetchJson(`${GEOCODE_URL}?name=${encodeURIComponent(name)}&count=10&language=${lang}&format=json`, { timeout: 2500 })
-    const match = (json.results || []).find(r => Math.abs(r.latitude - lat) < 0.1 && Math.abs(r.longitude - lon) < 0.1)
-    return match?.name || name
+    let match = await search(lang)
+    if (!match) {
+      const other = await search(lang === 'pt' ? 'en' : 'pt')
+      if (other?.id) match = await fetchJson(`${GEOCODE_GET_URL}?id=${other.id}&language=${lang}`, { timeout: 2500 }).catch(() => null)
+    }
+    return { name: match?.name || name, region: match?.admin1 || '' }
   } catch {
-    return name
+    return { name, region: '' }
   }
 }
 
@@ -338,11 +353,11 @@ export default async function handler(req, res) {
     const { lat, lon } = geo
     const now = new Date()
 
-    const [weatherData, aqiData, alerts, cityName] = await Promise.all([
+    const [weatherData, aqiData, alerts, named] = await Promise.all([
       fetchWeather(lat, lon),
       fetchAQI(lat, lon),
       withTimeout(fetchAlerts(geo.countryCode, lat, lon, now), 3500, []),
-      hasHint ? localizedName(city, lat, lon, lang) : geo.city,
+      hasHint ? localizedPlace(city, lat, lon, lang) : { name: geo.city, region: geo.region || '' },
     ])
 
     const curr     = weatherData.current || {}
@@ -421,7 +436,8 @@ export default async function handler(req, res) {
         const t = hTimes[idx]
         if (!t.startsWith(times[i]) || Number(t.slice(11, 13)) % 2) continue
         const hour = Number(t.slice(11, 13)), nowH = Number(nowHour.slice(11, 13))
-        entries.push({ ...hourEntry(idx), isNow: i === 0 && hour <= nowH && nowH < hour + 2 })
+        const isNow = i === 0 && hour <= nowH && nowH < hour + 2
+        entries.push(isNow ? { ...hourEntry(idx), tempC: Math.round(tempC * 10) / 10, isNow } : { ...hourEntry(idx), isNow })
       }
       forecast.push({
         d: dayLabel(times[i], i),
@@ -441,7 +457,9 @@ export default async function handler(req, res) {
       const idx = currIdx + i * 2
       if (idx >= hTemps.length) break
       const entry = hourEntry(idx)
-      hourly.push(i === 0 ? { ...entry, icon: iconForForecast(wmoCode, !isDay), isNow: true } : { ...entry, isNow: false })
+      hourly.push(i === 0
+        ? { ...entry, tempC: Math.round(tempC * 10) / 10, icon: iconForForecast(wmoCode, !isDay), isNow: true }
+        : { ...entry, isNow: false })
     }
 
     // AQI + UV
@@ -467,7 +485,7 @@ export default async function handler(req, res) {
     // A manual refresh must not be answered from the edge cache
     res.setHeader('Cache-Control', params.has('fresh') ? 'no-store' : 's-maxage=300, stale-while-revalidate=600')
     res.status(200).json({
-      city: cityName, country: geo.country, countryCode: geo.countryCode, flag: countryFlag(geo.countryCode),
+      city: named.name, region: named.region, country: geo.country, countryCode: geo.countryCode, flag: countryFlag(geo.countryCode),
       lat, lon,
       tempC: Math.round(tempC * 10) / 10,
       hiC: Math.round((hiArr[0] ?? tempC) * 10) / 10,

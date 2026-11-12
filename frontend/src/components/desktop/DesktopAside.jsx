@@ -3,6 +3,8 @@ import { ForecastIcon } from '../icons/WeatherIcons'
 import { GExternal, GDrop } from '../icons/UIGlyphs'
 import { T } from '../../utils/unitUtils'
 import { translateDay } from '../../utils/i18nUtils'
+import { useOnThisDay } from '../../hooks/useOnThisDay'
+import HistoryDateInput, { HistoryLoader } from '../history/HistoryDateInput'
 
 // Parchment grain overlay
 function ParchmentGrain() {
@@ -19,10 +21,11 @@ function ParchmentGrain() {
   )
 }
 
-export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDaySelect, forecastRef, historyRef }) {
+export default function DesktopAside({ data, unit, tr, language, selectedDayIdx = 0, onDaySelect, forecastRef, historyRef }) {
+  const otd = useOnThisDay(data, language)
   if (!data) return null
 
-  const dateLabel = new Date(`${data.localDate}T12:00:00Z`)
+  const dateLabel = new Date(`${otd.selectedDate || data.localDate}T12:00:00Z`)
     .toLocaleDateString(tr.locale, { day: 'numeric', month: 'short', timeZone: 'UTC' })
 
   // 7-day forecast range normalization
@@ -103,18 +106,22 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
 
       {/* On This Day */}
       <div ref={historyRef} style={{ scrollMarginTop: 26 }}>
-      <Glass antique accent="rgba(220,190,140,0.4)" style={{ padding: '18px 18px 14px' }}>
+      <div ref={otd.cardRef}>
+      <Glass antique accent="rgba(220,190,140,0.4)" style={{ padding: '18px 18px 14px', minHeight: otd.holdHeight }}>
         <ParchmentGrain />
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6,
           position: 'relative',
         }}>
-          <h2 style={{
-            margin: 0, fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 600,
-            color: '#fff8e7', fontSize: 26, letterSpacing: -0.3, lineHeight: 1,
-          }}>
-            {tr?.onThisDay || 'On this day'}
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, width: '100%' }}>
+            <h2 style={{
+              margin: 0, fontFamily: '"Geist", system-ui, sans-serif', fontWeight: 600,
+              color: '#fff8e7', fontSize: 26, letterSpacing: -0.3, lineHeight: 1,
+            }}>
+              {tr?.onThisDay || 'On this day'}
+            </h2>
+            <HistoryDateInput value={otd.selectedDate} onChange={otd.onDateChange} tr={tr} compact />
+          </div>
           <span style={{
             fontSize: 10.5, color: 'rgba(255,240,210,0.8)', fontWeight: 600,
             letterSpacing: 1.2, textTransform: 'uppercase',
@@ -123,8 +130,9 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
           </span>
         </div>
 
-        <div style={{ marginTop: 12, position: 'relative' }}>
-          {data.history.map((h, i) => (
+        <div style={{ marginTop: 12, position: 'relative' }} aria-live="polite" aria-busy={otd.loading}>
+          <HistoryLoader loading={otd.loading} empty={otd.history.length === 0} tr={tr} />
+          {!otd.loading && otd.history.map((h, i) => (
             <a
               key={i}
               href={h.href || undefined}
@@ -150,14 +158,14 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
                   {h.title}
                 </div>
                 <div style={{
-                  color: 'rgba(255,240,210,0.78)', fontSize: 12.5, lineHeight: 1.4,
+                  color: 'rgba(255,240,210,0.92)', fontSize: 12.5, lineHeight: 1.4,
                   marginTop: 4,
                 }}>
                   {h.body}
                 </div>
                 {h.href && <div style={{
                   marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 4,
-                  color: 'rgba(255,225,180,0.75)', fontSize: 10, fontWeight: 600,
+                  color: 'rgba(255,225,180,0.92)', fontSize: 10, fontWeight: 600,
                   letterSpacing: 1, textTransform: 'uppercase',
                 }}>
                   {tr?.wikipedia || 'Wikipedia'} <GExternal color="currentColor" />
@@ -167,6 +175,7 @@ export default function DesktopAside({ data, unit, tr, selectedDayIdx = 0, onDay
           ))}
         </div>
       </Glass>
+      </div>
       </div>
     </aside>
   )

@@ -4,6 +4,7 @@ import WeatherAlerts from '../alerts/WeatherAlerts'
 import UnitToggle from '../primitives/UnitToggle'
 import Flag from '../primitives/Flag'
 import { countryName } from '../../utils/i18nUtils'
+import { regionLabel } from '../../utils/place'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { heroIconKind } from '../../utils/weatherUtils'
 import { GLeaf, GUV, GDrop } from '../icons/UIGlyphs'
@@ -69,7 +70,7 @@ export default function DesktopHero({
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: '"Geist", system-ui, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Flag cc={data.countryCode} size={13} /> {[regionLabel(data.city, data.region, data.countryCode), countryName(data.countryCode, tr.locale, data.country)].filter(Boolean).join(', ')}</span>
           </div>
           <h1
             style={{

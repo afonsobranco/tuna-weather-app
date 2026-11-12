@@ -33,6 +33,10 @@ export default function MobileHourlyStrip({ hourly = [], dayLabel, unit, tr }) {
           <Glass
             key={i}
             style={{
+              backdropFilter: 'none',
+              WebkitBackdropFilter: 'none',
+              // Scrollers clip outer shadows into a hard-edged band (and blur into a box); keep the inner highlight
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22)',
               minWidth: 64,
               flexShrink: 0,
               padding: '10px 6px',

@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { placeKey, hasCoords } from '../utils/place'
 import { API_BASE } from '../utils/api'
 
-const STALE_MS = 15 * 60 * 1000 // 15 minutes
+// Newer than this is used as-is; older cached data is shown at once and refreshed behind it
+const STALE_MS = 5 * 60 * 1000
 
 function getCached(key) {
   try {
@@ -69,6 +70,7 @@ export function useWeather(place, language) {
   const [error, setError] = useState(null)
   const [notFound, setNotFound] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [failReason, setFailReason] = useState(null) // 'network' | 'server'
   const [isStale, setIsStale] = useState(false)
   const abortRef = useRef(null)
   const placeRef = useRef(place)
@@ -121,6 +123,7 @@ export function useWeather(place, language) {
       if (err.name === 'AbortError') return
       setNotFound(err.status === 404)
       setFailed(err.status !== 404)
+      setFailReason(err.status ? 'server' : 'network')
       setError(err.message || 'Network error')
     } finally {
       if (abortRef.current === controller) setIsLoading(false)
@@ -138,6 +141,7 @@ export function useWeather(place, language) {
     error,
     notFound,
     failed,
+    failReason,
     isStale,
     // Old place's data is still on screen while a different place loads
     isSwitching: isLoading && !!data && dataKey !== key,

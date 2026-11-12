@@ -2,7 +2,7 @@ import CitySearch, { SearchStatus } from '../search/CitySearch'
 import UnitToggle from '../primitives/UnitToggle'
 import Flag from '../primitives/Flag'
 import { useAppStore } from '../../context/AppContext'
-import { placeFromData, samePlace } from '../../utils/place'
+import { placeFromData, regionLabel, samePlace } from '../../utils/place'
 import { countryName } from '../../utils/i18nUtils'
 import { relativeTime } from '../../utils/unitUtils'
 import { useNow } from '../../hooks/useNow'
@@ -22,7 +22,7 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
     : ''
 
   return (
-    <div style={{ padding: '12px 16px 8px', position: 'relative', zIndex: 20 }}>
+    <div data-search-root style={{ padding: '12px 16px 8px', position: 'relative', zIndex: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <CitySearch
           tr={tr}
@@ -57,7 +57,7 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
               {data.city}
             </h1>
             <span style={{ fontFamily: FONT, fontWeight: 400, fontSize: 13, color: 'rgba(255,255,255,0.88)', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <span aria-hidden>·</span> <Flag cc={data.countryCode} size={13} /> {countryName(data.countryCode, tr.locale, data.country)} · {dateStr}
+              <span aria-hidden>·</span> <Flag cc={data.countryCode} size={13} /> {[regionLabel(data.city, data.region, data.countryCode), countryName(data.countryCode, tr.locale, data.country)].filter(Boolean).join(', ')} · {dateStr}
             </span>
           </div>
           <button

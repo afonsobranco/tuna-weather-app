@@ -1,12 +1,30 @@
 // A place is { name, lat, lon, country, cc }. Old saved entries may only have a name
 // until they are opened once and resolved by the API.
-export const DEFAULT_PLACE = { name: 'Lisbon', lat: 38.7251, lon: -9.1498, country: 'Portugal', cc: 'PT' }
+export const DEFAULT_PLACE = { name: 'Lisbon', names: { en: 'Lisbon', pt: 'Lisboa' }, lat: 38.7251, lon: -9.1498, country: 'Portugal', cc: 'PT' }
 
 export const SEED_PLACES = {
   Lisbon:      DEFAULT_PLACE,
-  London:      { name: 'London', lat: 51.5085, lon: -0.1257, country: 'United Kingdom', cc: 'GB' },
-  'Reykjavík': { name: 'Reykjavík', lat: 64.1355, lon: -21.8954, country: 'Iceland', cc: 'IS' },
-  Tokyo:       { name: 'Tokyo', lat: 35.6895, lon: 139.6917, country: 'Japan', cc: 'JP' },
+  London:      { name: 'London', names: { en: 'London', pt: 'Londres' }, lat: 51.5085, lon: -0.1257, country: 'United Kingdom', cc: 'GB' },
+  'Reykjavík': { name: 'Reykjavík', names: { en: 'Reykjavik', pt: 'Reiquiavique' }, lat: 64.1355, lon: -21.8954, country: 'Iceland', cc: 'IS' },
+  Tokyo:       { name: 'Tokyo', names: { en: 'Tokyo', pt: 'Tóquio' }, lat: 35.6895, lon: 139.6917, country: 'Japan', cc: 'JP' },
+}
+
+// A place's name in the given language, if we've seen it in that language
+export function displayName(place, lang) {
+  return place?.names?.[lang] || place?.name || ''
+}
+
+const fold = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+// Federal countries where the same city name often exists in several states
+// (Paris TX, Portland ME/OR, Honolulu NC/HI)
+const REGION_COUNTRIES = new Set(['US', 'CA', 'AU', 'BR', 'MX', 'IN', 'DE', 'AR', 'RU', 'CN'])
+
+// Region worth showing next to a name: only where it disambiguates, and not when it just
+// repeats the city ("New York, New York")
+export function regionLabel(name, region, cc) {
+  if (!region || !REGION_COUNTRIES.has((cc || '').toUpperCase())) return ''
+  return fold(region).includes(fold(name)) ? '' : region
 }
 
 export const hasCoords = (p) => Number.isFinite(p?.lat) && Number.isFinite(p?.lon)
@@ -36,11 +54,14 @@ export async function resolvePlaceName(name) {
 }
 
 export function placeFromData(data) {
-  return { name: data.city, lat: data.lat, lon: data.lon, country: data.country, cc: data.countryCode || '' }
+  return {
+    name: data.city, names: data.lang ? { [data.lang]: data.city } : undefined,
+    lat: data.lat, lon: data.lon, region: data.region || '', country: data.country, cc: data.countryCode || '',
+  }
 }
 
 export function placeFromSuggestion(s) {
-  return { name: s.name, lat: s.latitude, lon: s.longitude, country: s.country || '', cc: (s.country_code || '').toUpperCase() }
+  return { name: s.name, lat: s.latitude, lon: s.longitude, region: s.admin1 || '', country: s.country || '', cc: (s.country_code || '').toUpperCase() }
 }
 
 export function toPlace(value) {

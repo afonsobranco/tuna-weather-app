@@ -3,7 +3,7 @@ import UnitToggle from '../primitives/UnitToggle'
 import Flag from '../primitives/Flag'
 import CitySearch, { SearchStatus } from '../search/CitySearch'
 import { useAppStore } from '../../context/AppContext'
-import { placeFromData, placeKey, samePlace } from '../../utils/place'
+import { displayName, placeFromData, placeKey, regionLabel, samePlace } from '../../utils/place'
 import { T } from '../../utils/unitUtils'
 import { countryName } from '../../utils/i18nUtils'
 
@@ -59,7 +59,7 @@ export default function DesktopRail({
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div data-search-root style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <CitySearch
           tr={tr}
           language={language}
@@ -112,8 +112,10 @@ export default function DesktopRail({
           {savedCities.map((city) => {
             const isActive = current ? samePlace(city, current) : false
             const temp = cityTemps?.[placeKey(city)]
+            const name = displayName(city, language)
             const country = countryName(city.cc, tr.locale, city.country || '')
-            const fullName = country ? `${city.name}, ${country}` : city.name
+            const where = [regionLabel(name, city.region, city.cc), country].filter(Boolean).join(', ')
+            const fullName = where ? `${name}, ${where}` : name
             return (
               <li key={placeKey(city)} style={{ position: 'relative' }}>
                 <button
@@ -133,11 +135,11 @@ export default function DesktopRail({
                     fontFamily: FONT, fontSize: 14, fontWeight: isActive ? 600 : 400,
                     color: isActive ? '#fff' : 'rgba(255,255,255,0.88)',
                   }}>
-                    {city.name}
+                    {name}
                   </span>
-                  {(country || temp != null) && (
+                  {(where || temp != null) && (
                     <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.88)' }}>
-                      {[country, temp != null ? `${T(temp, unit)}°` : null].filter(Boolean).join(' · ')}
+                      {[where, temp != null ? `${T(temp, unit)}°` : null].filter(Boolean).join(' · ')}
                     </span>
                   )}
                 </button>

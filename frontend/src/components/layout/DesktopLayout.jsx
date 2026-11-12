@@ -8,7 +8,7 @@ import SkeletonLoader from '../states/SkeletonLoader'
 import EmptyState from '../states/EmptyStates'
 import Astronomy from '../mobile/Astronomy'
 import DesktopHealthScore from '../desktop/DesktopHealthScore'
-import { WARM_GLASS, WARM_STATES, skyScrim } from '../../utils/weatherUtils'
+import { fadeSkyDecor, skyScrim, skyVars } from '../../utils/weatherUtils'
 
 export default function DesktopLayout({
   data,
@@ -64,11 +64,11 @@ export default function DesktopLayout({
   const selectedDay = data?.forecast?.[selectedDayIdx]
 
   return (
-    <div style={{
+    <div data-sky-root style={{
       position: 'relative', width: '100%', height: '100%',
       overflow: 'hidden', color: '#fff',
       fontFamily: '"Geist", system-ui, -apple-system, sans-serif',
-      ...(WARM_STATES.includes(weatherState) ? WARM_GLASS : {}),
+      ...skyVars(weatherState),
     }}>
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <WeatherBackground state={weatherState} />
@@ -97,6 +97,7 @@ export default function DesktopLayout({
 
         <main
           ref={mainRef}
+          onScroll={fadeSkyDecor}
           className="hide-scroll"
           style={{
             flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column',

@@ -37,13 +37,21 @@ export const useAppStore = create(
     }),
     {
       name: 'tuna-app-store',
-      version: 1,
+      version: 2,
       migrate: (state, version) => {
         if (version < 1) {
           state.savedCities = (state.savedCities || []).map(toPlace).filter(Boolean)
           state.lastCity = toPlace(state.lastCity)
           state.cityTemps = {}
           delete state.cityLocations
+        }
+        if (version < 2) {
+          // Default cities gain their Portuguese names
+          const seeds = Object.values(SEED_PLACES)
+          state.savedCities = (state.savedCities || []).map((p) => {
+            const seed = seeds.find((s) => samePlace(s, p))
+            return seed ? { ...p, names: { ...seed.names, ...p.names } } : p
+          })
         }
         return state
       },

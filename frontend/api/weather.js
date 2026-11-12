@@ -63,7 +63,7 @@ function aqiLabel(val) {
 
 // ─── Health score ─────────────────────────────────────────────────────────────
 const HEALTH_TIPS_EN = {
-  alertRed:      'Red weather warning in effect. Stay indoors and follow official advice.',
+  alertRed:      'Severe weather warning in effect. Stay indoors and follow official advice.',
   alertOrange:   'Weather warning in effect. Avoid unnecessary trips outside.',
   alertYellow:   'Weather advisory in effect. Check conditions before heading out.',
   storm:         'Thunderstorms around. Stay indoors and avoid open spaces.',
@@ -78,11 +78,14 @@ const HEALTH_TIPS_EN = {
   aqiPoor:       'Unhealthy air quality. Limit time outdoors; wear an N95 if you go out.',
   challenging:   'Challenging conditions. Limit strenuous outdoor activity.',
   avoid:         'Avoid prolonged outdoor exposure today.',
+  cold:          'Freezing out. Wrap up warm, cover hands and ears, and watch for ice.',
+  heat:          'Very hot. Drink water, avoid the midday sun and take it easy.',
+  calmNight:     'Calm night outside. Fine for an evening walk.',
 }
 
 const clamp100 = (v) => Math.max(0, Math.min(100, v))
 
-function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, isDay, alertLevel }) {
+function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, feelsC = tempC, isDay, alertLevel }) {
   const factors = [
     { key: 'uv',       weight: 25, score: clamp100(100 - uv * 9) },
     { key: 'aqi',      weight: 40, score: clamp100(100 - aqi * 0.6) },
@@ -101,6 +104,14 @@ function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, isDay, aler
   else if ([65, 67, 82].includes(code) || (kind === 'rain' && precip >= 80)) { weather = 'rain'; penalty = 20 }
   else if (wet)                                          { weather = 'rain';  penalty = 10 }
 
+  // How it actually feels outside: freezing or very hot air costs points too
+  let thermal = null
+  if (feelsC <= -10)     { thermal = 'cold'; penalty += 20 }
+  else if (feelsC <= 0)  { thermal = 'cold'; penalty += 12 }
+  else if (feelsC <= 5)  { penalty += 6 }
+  else if (feelsC >= 38) { thermal = 'heat'; penalty += 20 }
+  else if (feelsC >= 32) { thermal = 'heat'; penalty += 10 }
+
   let score = Math.max(0, base - penalty)
   if (alertLevel === 'red')    score = Math.min(score, 30)
   if (alertLevel === 'orange') score = Math.min(score, 50)
@@ -114,10 +125,11 @@ function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, isDay, aler
   else if (weather === 'storm' || weather === 'snow') tipKey = weather
   else if (alertLevel === 'yellow')  tipKey = 'alertYellow'
   else if (weather)                  tipKey = weather
+  else if (thermal)                  tipKey = thermal
   // Air-quality tips follow the same bands as the AQI badge, so they never disagree
   else if (aqiTone === 'red')        tipKey = 'aqiPoor'
-  else if (score >= 85)              tipKey = 'perfect'
-  else if (score >= 70)              tipKey = isDay && uv >= 3 ? 'goodSunscreen' : 'good'
+  else if (score >= 85)              tipKey = isDay ? 'perfect' : 'calmNight'
+  else if (score >= 70)              tipKey = !isDay ? 'calmNight' : uv >= 3 ? 'goodSunscreen' : 'good'
   else if (score >= 55) {
     if (aqiTone === 'orange')                             tipKey = 'aqiModerate'
     else if (isDay && ['orange', 'red'].includes(uvTone)) tipKey = 'uvHigh'
@@ -487,7 +499,7 @@ export default async function handler(req, res) {
 
     const precipNext12 = Math.max(0, ...hPrecip.slice(currIdx, currIdx + 12).filter(Number.isFinite))
     const health = healthScore({
-      uv: isDay && (sun?.progress ?? 0) < 0.6 ? uvDay : uvCurr, aqi: aqiVal, humidity, wind: windSpd, tempC,
+      uv: isDay && (sun?.progress ?? 0) < 0.6 ? uvDay : uvCurr, aqi: aqiVal, humidity, wind: windSpd, tempC, feelsC: feels,
       code: wmoCode, precip: precipNext12, isDay, alertLevel: worstAlert,
     })
 

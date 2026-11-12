@@ -15,12 +15,14 @@ const FONT = '"Geist", system-ui, sans-serif'
 
 function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone, caption }) {
   return (
-    <Glass style={{ padding: '14px 16px', flex: 1, minWidth: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8, minWidth: 0 }}>
+    // Rows are shared with the sibling cells (subgrid): a label that wraps to two lines
+    // ("Qualidade do ar" on a narrow card) pushes every card's value down together
+    <Glass style={{ padding: '14px 16px', minWidth: 0, display: 'grid', gridRow: 'span 3', gridTemplateRows: 'subgrid', rowGap: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 8, minWidth: 0 }}>
         {icon}
         <h2 title={label} style={{
           margin: 0, fontFamily: FONT, fontSize: 10.5, fontWeight: 400, color: 'rgba(255,255,255,0.88)', textTransform: 'uppercase', letterSpacing: 0.15,
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          lineHeight: 1.25, minWidth: 0, overflowWrap: 'anywhere',
         }}>
           {label}
         </h2>
@@ -35,12 +37,10 @@ function MetricCell({ icon, label, value, unit: uLabel, tone, toneTone, caption 
           </span>
         )}
       </div>
-      {(tone || caption) && (
-        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          {tone && <Tone tone={toneTone}>{tone}</Tone>}
-          {caption && <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.88)' }}>{caption}</span>}
-        </div>
-      )}
+      <div style={{ marginTop: tone || caption ? 6 : 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        {tone && <Tone tone={toneTone}>{tone}</Tone>}
+        {caption && <span style={{ fontFamily: FONT, fontSize: 11, color: 'rgba(255,255,255,0.88)' }}>{caption}</span>}
+      </div>
     </Glass>
   )
 }
@@ -175,7 +175,7 @@ export default function DesktopHero({
       )}
 
       {/* 4-up metric grid */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridTemplateRows: 'auto auto 1fr', gap: 10, rowGap: 0 }}>
         <MetricCell
           icon={<GUV size={13} color="rgba(255,255,255,0.5)" />}
           label={tr.uvIndex}

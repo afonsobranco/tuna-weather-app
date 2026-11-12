@@ -39,7 +39,8 @@ function pickText(alert, lang, tr) {
     title: title ? title.charAt(0).toUpperCase() + title.slice(1) : '',
     // An agency title we couldn't translate stays in its own language
     titleLang: typeName || known ? lang : (textLang || lang),
-    description: src.description || '',
+    // US bulletins arrive hard-wrapped at ~70 characters: join lines, keep paragraph breaks
+    description: (src.description || '').replace(/([^\n])\n(?!\n)/g, '$1 '),
     textLang: textLang || lang,
   }
 }
@@ -64,6 +65,9 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
           const when = active
             ? tr.alertUntil(formatWhen(a.expires, timezone, locale, tr))
             : tr.alertFrom(formatWhen(a.onset, timezone, locale, tr))
+          // On a phone a long title plus time would wrap with "·" starting the second line:
+          // put the time on its own line instead
+          const stacked = small && title.length + when.length > 38
           return (
             <button
               key={i}
@@ -83,9 +87,9 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
               }}
             >
               <span style={{ fontSize: small ? 12 : 13, color: c.fg, flexShrink: 0 }} aria-hidden>⚠</span>
-              <span>
-                <span lang={titleLang !== lang ? titleLang : undefined} style={{ fontWeight: 600 }}>{title}</span>{' '}
-                <span style={{ color: 'rgba(255,255,255,0.75)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>· {when}</span>
+              <span style={stacked ? { display: 'flex', flexDirection: 'column', gap: 2 } : undefined}>
+                <span lang={titleLang !== lang ? titleLang : undefined} style={{ fontWeight: 600 }}>{title}</span>{stacked ? null : ' '}
+                <span style={{ color: 'rgba(255,255,255,0.75)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{stacked ? when : `· ${when}`}</span>
               </span>
             </button>
           )

@@ -98,14 +98,23 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
   const handleKeyDown = (e) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); search.move(1) }
     else if (e.key === 'ArrowUp') { e.preventDefault(); search.move(-1) }
-    else if (e.key === 'Escape') { search.close() }
+    else if (e.key === 'Escape') {
+      // First Escape closes the list; with no list open it clears the box and any message
+      if (open) search.close()
+      else { search.setQuery(''); onClearStatus?.() }
+    }
   }
 
   const showList = open && query.trim().length >= 2
   const optionId = (i) => `${listId}-opt-${i}`
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+    <div
+      ref={wrapperRef}
+      style={{ position: 'relative', flex: 1, minWidth: 0 }}
+      // Leaving the search drops a stale "no city found" (a failed load keeps its Retry)
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget) && status?.status === 'error') onClearStatus?.() }}
+    >
       <Glass className="search-pill" style={{
         borderRadius: 999, height: small ? 44 : 46,
         display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8,
@@ -181,7 +190,7 @@ export default function CitySearch({ tr, language, onSearch, status, onClearStat
                   {s.name}
                 </span>
                 <span style={{ fontFamily: FONT, fontSize: small ? 11 : 12, color: 'rgba(255,255,255,0.88)', marginLeft: 6 }}>
-                  {[s.admin1, s.country || countryName(s.country_code, tr.locale, s.country_code)].filter(Boolean).join(', ')}
+                  {[s.admin1, countryName(s.country_code, tr.locale, s.country || s.country_code)].filter(Boolean).join(', ')}
                 </span>
               </div>
             </div>

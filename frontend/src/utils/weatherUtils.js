@@ -63,12 +63,14 @@ export function tomorrowCondition(iconKind, tr, hiC) {
     storm: { label: 'Stormy',         tip: 'Avoid early commute' },
     snow:  { label: 'Snow expected',  tip: 'Dress warm, roads may be icy' },
     cloud: { label: 'Overcast',       tip: 'Layer up — slow warmth' },
+    cloudWarm: { label: 'Overcast',   tip: 'Warm under the clouds — dress light' },
     moon:  { label: 'Clear',          tip: 'Crisp start' },
   }
   const defaultEnglish = { label: 'Clear & cool', tip: 'Great for a run' }
   const baseIcon = icons[iconKind] || { icon: iconKind === 'sun' ? 'sun' : 'partly', accent: '#FFD18A' }
   // Fair-weather wording depends on how warm it will be ("Clear & cool" at 32° reads wrong)
   let key = iconKind
+  if (iconKind === 'cloud' && hiC >= 24) key = 'cloudWarm'
   if (!icons[iconKind] || iconKind === 'moon') {
     key = hiC >= 28 ? 'hot' : hiC <= 8 ? 'cold' : iconKind === 'moon' ? 'moon' : 'default'
   }

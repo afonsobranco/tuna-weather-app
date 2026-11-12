@@ -59,7 +59,7 @@ export default {
   healthWeight: (w) => `weight ${w}%`,
   healthPenalty: "Weather & warnings",
   healthTips: {
-    alertRed:      'Red weather warning in effect. Stay indoors and follow official advice.',
+    alertRed:      'Severe weather warning in effect. Stay indoors and follow official advice.',
     alertOrange:   'Weather warning in effect. Avoid unnecessary trips outside.',
     alertYellow:   'Weather advisory in effect. Check conditions before heading out.',
     storm:         'Thunderstorms around. Stay indoors and avoid open spaces.',
@@ -74,6 +74,9 @@ export default {
     aqiPoor:       'Unhealthy air quality. Limit time outdoors; wear an N95 if you go out.',
     challenging:   'Challenging conditions. Limit strenuous outdoor activity.',
     avoid:         'Avoid prolonged outdoor exposure today.',
+    cold:          'Freezing out. Wrap up warm, cover hands and ears, and watch for ice.',
+    heat:          'Very hot. Drink water, avoid the midday sun and take it easy.',
+    calmNight:     'Calm night outside. Fine for an evening walk.',
   },
   alertTitle: (level, type) => `${{ yellow: 'Yellow', orange: 'Orange', red: 'Red' }[level] || ''} ${type} warning`.trim(),
   alertTypes: {
@@ -155,6 +158,7 @@ export default {
     rain:    { label: 'Rain expected',  tip: 'Pack an umbrella' },
     storm:   { label: 'Stormy',         tip: 'Avoid early commute' },
     cloud:   { label: 'Overcast',       tip: 'Layer up — slow warmth' },
+    cloudWarm: { label: 'Overcast',     tip: 'Warm under the clouds — dress light' },
     moon:    { label: 'Clear',          tip: 'Crisp start' },
     snow:    { label: 'Snow expected',  tip: 'Dress warm, roads may be icy' },
     hot:     { label: 'Hot & sunny',    tip: 'Stay hydrated, seek shade' },

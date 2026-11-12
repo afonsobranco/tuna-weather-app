@@ -37,10 +37,16 @@ export default function App() {
     const alerts = data.alerts.filter((a) => !a.expires || new Date(a.expires).getTime() > Date.now())
     return alerts.length === data.alerts.length ? data : { ...data, alerts }
   }, [data, minute])
-  const expiredRefreshRef = useRef(null)
+  // Refresh once per place and ended alert. If the server still sends it (its clock is
+  // behind the device's), the alert stays hidden and we don't ask again, so a skewed
+  // clock can't turn this into a request loop.
+  const expiredRefreshRef = useRef(new Set())
   useEffect(() => {
-    if (view === data || isLoading || expiredRefreshRef.current === data?.fetchedAt) return
-    expiredRefreshRef.current = data?.fetchedAt
+    if (view === data || isLoading || !data) return
+    const ended = data.alerts.filter((a) => !view.alerts.includes(a)).map((a) => `${a.type}|${a.expires}`).sort().join(',')
+    const key = `${placeKey({ lat: data.lat, lon: data.lon })}|${ended}`
+    if (expiredRefreshRef.current.has(key)) return
+    expiredRefreshRef.current.add(key)
     refetch(true)
   }, [view, data, isLoading])
 

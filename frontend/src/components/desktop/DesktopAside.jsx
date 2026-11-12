@@ -2,7 +2,7 @@ import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { GExternal, GDrop } from '../icons/UIGlyphs'
 import { T } from '../../utils/unitUtils'
-import { translateDay } from '../../utils/i18nUtils'
+import { translateDay, translateDayLong } from '../../utils/i18nUtils'
 import { useOnThisDay } from '../../hooks/useOnThisDay'
 import HistoryDateInput, { HistoryLoader } from '../history/HistoryDateInput'
 
@@ -60,7 +60,7 @@ export default function DesktopAside({ data, unit, tr, language, selectedDayIdx 
               key={i}
               onClick={() => onDaySelect?.(i)}
               aria-pressed={i === selectedDayIdx}
-              aria-label={tr.dayForecast(translateDay(d.d, tr), d.p ?? 0, T(d.hi, unit), T(d.lo, unit))}
+              aria-label={tr.dayForecast(translateDayLong(d.d, tr), d.p ?? 0, T(d.hi, unit), T(d.lo, unit))}
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'minmax(64px, auto) 24px 40px 1fr 52px',

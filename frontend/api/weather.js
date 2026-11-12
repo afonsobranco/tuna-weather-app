@@ -29,7 +29,7 @@ function wmoCondition(code) { return WMO_MAP[code] || ['Partly Cloudy', 'partly'
 
 function wmoWeatherState(code, isNight) {
   if ([0, 1, 2].includes(code)) return isNight ? 'clear-night' : 'clear-day'
-  if (code === 3 || (code >= 45 && code < 50)) return isNight ? 'clear-night' : 'overcast'
+  if (code === 3 || (code >= 45 && code < 50)) return 'overcast' // no stars under full cloud or fog
   if (code >= 51) return 'rainy'
   return 'clear-day'
 }
@@ -75,7 +75,7 @@ const HEALTH_TIPS_EN = {
   aqiModerate:   'Moderate air quality. Sensitive groups should limit outdoor time.',
   uvHigh:        'High UV. Stay in the shade during midday hours.',
   ok:            'Acceptable conditions. Stay hydrated.',
-  aqiPoor:       'Poor air quality. Wear an N95 if outdoors; open windows briefly.',
+  aqiPoor:       'Unhealthy air quality. Limit time outdoors; wear an N95 if you go out.',
   challenging:   'Challenging conditions. Limit strenuous outdoor activity.',
   avoid:         'Avoid prolonged outdoor exposure today.',
 }
@@ -114,14 +114,16 @@ function healthScore({ uv, aqi, humidity, wind, code, precip, tempC, isDay, aler
   else if (weather === 'storm' || weather === 'snow') tipKey = weather
   else if (alertLevel === 'yellow')  tipKey = 'alertYellow'
   else if (weather)                  tipKey = weather
+  // Air-quality tips follow the same bands as the AQI badge, so they never disagree
+  else if (aqiTone === 'red')        tipKey = 'aqiPoor'
   else if (score >= 85)              tipKey = 'perfect'
   else if (score >= 70)              tipKey = isDay && uv >= 3 ? 'goodSunscreen' : 'good'
   else if (score >= 55) {
-    if (aqiTone === 'red')                                tipKey = 'aqiModerate'
+    if (aqiTone === 'orange')                             tipKey = 'aqiModerate'
     else if (isDay && ['orange', 'red'].includes(uvTone)) tipKey = 'uvHigh'
     else                                                  tipKey = 'ok'
   }
-  else if (score >= 40)              tipKey = aqiTone === 'red' ? 'aqiPoor' : 'challenging'
+  else if (score >= 40)              tipKey = aqiTone === 'orange' ? 'aqiModerate' : 'challenging'
   else                               tipKey = 'avoid'
 
   return { score, tipKey, tip: HEALTH_TIPS_EN[tipKey], factors, penalty: base - score }
@@ -265,10 +267,14 @@ async function localAreaNames(lat, lon) {
   return names
 }
 
+// Whole words only: "wien" must not match "Wiener Neustadt"
+const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const hasWord = (hay, word) => !!word && new RegExp(`(^|[^a-z0-9])${escapeRe(word)}($|[^a-z0-9])`).test(hay)
+
 function areaMatches(areaDesc, names) {
   const area = normalize(areaDesc)
   const head = normalize(areaDesc.split(' - ')[0])
-  return names.some(n => n === area || n === head || area.includes(n) || n.includes(head))
+  return names.some(n => n === area || n === head || hasWord(area, n) || hasWord(n, head))
 }
 
 async function fetchMeteoAlarmAlerts(countryCode, lat, lon, now) {
@@ -335,6 +341,11 @@ async function fetchAlerts(countryCode, lat, lon, now) {
   }
 }
 
+// Country name for a code in the response language ("PT" → "Portugal")
+function regionName(cc, lang) {
+  try { return (cc && new Intl.DisplayNames([lang], { type: 'region' }).of(cc.toUpperCase())) || '' } catch { return '' }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   const params = new URL(req.url, 'http://x').searchParams
@@ -348,7 +359,7 @@ export default async function handler(req, res) {
 
   try {
     const geo = hasHint
-      ? { lat: hintLat, lon: hintLon, city, country: params.get('country') || '', countryCode: (params.get('cc') || '').toUpperCase() }
+      ? { lat: hintLat, lon: hintLon, city, country: params.get('country') || regionName(params.get('cc'), lang), countryCode: (params.get('cc') || '').toUpperCase() }
       : await geocodeCity(city, lang)
     const { lat, lon } = geo
     const now = new Date()

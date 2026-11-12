@@ -20,9 +20,8 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
     ? new Date(`${data.localDate}T12:00:00Z`).toLocaleDateString(tr.locale, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
     : ''
 
-  const where = data
-    ? [regionLabel(data.city, data.region, data.countryCode), countryName(data.countryCode, tr.locale, data.country)].filter(Boolean).join(', ')
-    : ''
+  const region = data ? regionLabel(data.city, data.region, data.countryCode) : ''
+  const country = data ? countryName(data.countryCode, tr.locale, data.country) : ''
 
   return (
     <div data-search-root style={{ padding: '12px 16px 8px', position: 'relative', zIndex: 20 }}>
@@ -50,8 +49,14 @@ export default function SearchBar({ data, unit, language, tr, onToggleUnit, onSe
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0, fontFamily: FONT, fontSize: 13, lineHeight: 1.4, color: 'rgba(255,255,255,0.88)' }}>
               <Flag cc={data.countryCode} size={13} />
-              <span title={where} style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {where}
+              {/* A long region ("National Capital Territory of Delhi") is cut first; the country stays */}
+              <span style={{ display: 'flex', minWidth: 0 }}>
+                {region && (
+                  <span title={region} style={{ minWidth: 24, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {region}
+                  </span>
+                )}
+                <span style={{ flexShrink: 0, whiteSpace: 'pre' }}>{region ? ', ' : ''}{country}</span>
               </span>
               <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}><span aria-hidden>·</span> {dateStr}</span>
             </div>

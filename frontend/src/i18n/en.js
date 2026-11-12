@@ -44,7 +44,10 @@ export default {
   savedFull: (added, removed) => `${added} saved. ${removed} was removed to make room (8 cities max).`,
   undo: "Undo",
   dismiss: "Dismiss",
-  dayForecast: (day, p, hi, lo) => `${day}: high ${hi}°, low ${lo}°, ${p}% chance of rain`,
+  dayForecast: (day, p, hi, lo) => `${day}: high ${hi}°, low ${lo}°, ${p}% chance of precipitation`,
+  alertToday: (t) => `${t} today`,
+  alertTomorrow: (t) => `${t} tomorrow`,
+  nwsEvents: {},
   wikipediaNewTab: "Wikipedia, opens in a new tab",
   readOnWikipedia: (t) => `Read “${t}” on Wikipedia (opens in a new tab)`,
   historyShowing: (n, date) => `${n} event${n === 1 ? '' : 's'} for ${date}`,
@@ -68,7 +71,7 @@ export default {
     aqiModerate:   'Moderate air quality. Sensitive groups should limit outdoor time.',
     uvHigh:        'High UV. Stay in the shade during midday hours.',
     ok:            'Acceptable conditions. Stay hydrated.',
-    aqiPoor:       'Poor air quality. Wear an N95 if outdoors; open windows briefly.',
+    aqiPoor:       'Unhealthy air quality. Limit time outdoors; wear an N95 if you go out.',
     challenging:   'Challenging conditions. Limit strenuous outdoor activity.',
     avoid:         'Avoid prolonged outdoor exposure today.',
   },
@@ -144,6 +147,7 @@ export default {
   windDirs: { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SW', W: 'W', NW: 'NW' },
 
   // Short day names for forecast strip
+  daysLong: { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' },
   days: { Mon: 'Mon', Tue: 'Tue', Wed: 'Wed', Thu: 'Thu', Fri: 'Fri', Sat: 'Sat', Sun: 'Sun' },
 
   // Tomorrow tile condition labels + tips

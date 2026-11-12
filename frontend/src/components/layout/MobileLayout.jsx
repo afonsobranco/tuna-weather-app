@@ -34,9 +34,16 @@ export default function MobileLayout({
 }) {
   const [dayIdx, setDayIdx] = useState(0)
   const hourlyRef = useRef(null)
+  const scrollerRef = useRef(null)
+  // Picking a day at the bottom changes the hourly strip far above: bring it into view
   const selectDay = (i) => {
     setDayIdx(i)
-    hourlyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const scroller = scrollerRef.current
+    const target = hourlyRef.current
+    if (!scroller || !target) return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const top = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 72
+    requestAnimationFrame(() => scroller.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' }))
   }
   useEffect(() => { setDayIdx(0) }, [data?.lat, data?.lon])
 
@@ -79,6 +86,7 @@ export default function MobileLayout({
 
       {/* Scrollable content */}
       <div
+        ref={scrollerRef}
         className="hide-scroll"
         onScroll={fadeSkyDecor}
         style={{

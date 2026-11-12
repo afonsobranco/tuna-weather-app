@@ -44,7 +44,28 @@ export default {
   savedFull: (added, removed) => `${added} guardada. ${removed} saiu da lista para dar lugar (máx. 8 cidades).`,
   undo: "Desfazer",
   dismiss: "Fechar",
-  dayForecast: (day, p, hi, lo) => `${day}: máxima ${hi}°, mínima ${lo}°, ${p}% de probabilidade de chuva`,
+  dayForecast: (day, p, hi, lo) => `${day}: máxima ${hi}°, mínima ${lo}°, ${p}% de probabilidade de precipitação`,
+  alertToday: (t) => `hoje, ${t}`,
+  alertTomorrow: (t) => `amanhã, ${t}`,
+  // Most common US National Weather Service events
+  nwsEvents: {
+    'winter storm warning': 'Aviso de tempestade de inverno', 'winter storm watch': 'Alerta de tempestade de inverno',
+    'winter weather advisory': 'Aviso de tempo invernal', 'blizzard warning': 'Aviso de nevão',
+    'ice storm warning': 'Aviso de tempestade de gelo', 'wind advisory': 'Aviso de vento',
+    'lake wind advisory': 'Aviso de vento no lago', 'high wind warning': 'Aviso de vento forte',
+    'high wind watch': 'Alerta de vento forte', 'heat advisory': 'Aviso de calor',
+    'excessive heat warning': 'Aviso de calor extremo', 'extreme heat warning': 'Aviso de calor extremo',
+    'freeze warning': 'Aviso de geada', 'frost advisory': 'Aviso de geada',
+    'flood warning': 'Aviso de inundação', 'flood watch': 'Alerta de inundação', 'flash flood warning': 'Aviso de cheia repentina',
+    'flood advisory': 'Aviso de inundação', 'dense fog advisory': 'Aviso de nevoeiro denso',
+    'red flag warning': 'Aviso de risco de incêndio', 'fire weather watch': 'Alerta de risco de incêndio',
+    'severe thunderstorm warning': 'Aviso de trovoada forte', 'severe thunderstorm watch': 'Alerta de trovoada forte',
+    'tornado warning': 'Aviso de tornado', 'tornado watch': 'Alerta de tornado',
+    'hurricane warning': 'Aviso de furacão', 'tropical storm warning': 'Aviso de tempestade tropical',
+    'small craft advisory': 'Aviso para pequenas embarcações', 'beach hazards statement': 'Aviso de perigo nas praias',
+    'rip current statement': 'Aviso de correntes de retorno', 'air quality alert': 'Alerta de qualidade do ar',
+    'extreme cold warning': 'Aviso de frio extremo', 'cold weather advisory': 'Aviso de frio',
+  },
   wikipediaNewTab: "Wikipédia, abre num novo separador",
   readOnWikipedia: (t) => `Ler “${t}” na Wikipédia (abre num novo separador)`,
   historyShowing: (n, date) => `${n} acontecimento${n === 1 ? '' : 's'} em ${date}`,
@@ -68,7 +89,7 @@ export default {
     aqiModerate:   'Qualidade do ar moderada. Grupos sensíveis devem limitar o tempo na rua.',
     uvHigh:        'UV elevado. Procura sombra nas horas centrais do dia.',
     ok:            'Condições aceitáveis. Mantém-te hidratado.',
-    aqiPoor:       'Má qualidade do ar. Usa máscara FFP2 na rua; abre as janelas pouco tempo.',
+    aqiPoor:       'Qualidade do ar prejudicial. Limita o tempo na rua; usa máscara FFP2 se saíres.',
     challenging:   'Condições difíceis. Limita o esforço físico ao ar livre.',
     avoid:         'Evita estar muito tempo na rua hoje.',
   },
@@ -144,6 +165,7 @@ export default {
   windDirs: { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SO', W: 'O', NW: 'NO' },
 
   // Abreviações dos dias da semana
+  daysLong: { Mon: 'Segunda-feira', Tue: 'Terça-feira', Wed: 'Quarta-feira', Thu: 'Quinta-feira', Fri: 'Sexta-feira', Sat: 'Sábado', Sun: 'Domingo' },
   days: { Mon: 'Seg', Tue: 'Ter', Wed: 'Qua', Thu: 'Qui', Fri: 'Sex', Sat: 'Sáb', Sun: 'Dom' },
 
   // Condição de amanhã — legendas e dicas

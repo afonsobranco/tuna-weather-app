@@ -16,6 +16,13 @@ export function formatMinutes(min) {
   return h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`
 }
 
+// Full day name for screen-reader labels ("Saturday", not "Sat")
+export function translateDayLong(d, tr) {
+  if (d === 'Today') return tr.today
+  if (d === 'Tomorrow') return tr.tomorrow
+  return tr.daysLong?.[d] || translateDay(d, tr)
+}
+
 export function translateDay(d, tr) {
   if (d === 'Today') return tr.today
   if (d === 'Tomorrow') return tr.tomorrow

@@ -1,7 +1,7 @@
 import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { T } from '../../utils/unitUtils'
-import { translateDay } from '../../utils/i18nUtils'
+import { translateDay, translateDayLong } from '../../utils/i18nUtils'
 
 export default function Forecast({ data, unit, tr, selectedIdx = 0, onSelect }) {
   if (!data || !data.forecast || data.forecast.length === 0) return null
@@ -47,7 +47,7 @@ export default function Forecast({ data, unit, tr, selectedIdx = 0, onSelect }) 
               type="button"
               onClick={() => onSelect?.(idx)}
               aria-pressed={isSelected}
-              aria-label={tr.dayForecast(translateDay(day.d, tr), day.p ?? 0, hi, lo)}
+              aria-label={tr.dayForecast(translateDayLong(day.d, tr), day.p ?? 0, hi, lo)}
               style={{ flex: '1 0 84px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', color: 'inherit' }}
             >
             <Glass

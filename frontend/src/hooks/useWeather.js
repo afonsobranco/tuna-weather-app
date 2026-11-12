@@ -35,7 +35,7 @@ function weatherUrl(place, language, fresh) {
   if (hasCoords(place)) {
     p.set('lat', place.lat.toFixed(4))
     p.set('lon', place.lon.toFixed(4))
-    if (place.country) p.set('country', place.country)
+    if (place.country && !place.cc) p.set('country', place.country)
     if (place.cc) p.set('cc', place.cc)
   }
   return `${API_BASE}/weather?${p}`

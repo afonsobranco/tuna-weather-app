@@ -7,11 +7,19 @@ const LEVEL_COLORS = {
   red:    { fg: '#FF7A7A', bg: 'rgba(40,10,12,0.66)', bgOpen: 'rgba(80,18,20,0.76)', border: 'rgba(255,107,107,0.85)' },
 }
 
-function formatWhen(iso, timezone, locale) {
+const dayKey = (date, timeZone) => new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+
+// "22:00 today" / "06:00 tomorrow" / "Fri 03:00", in the city's time zone
+function formatWhen(iso, timezone, locale, tr) {
   try {
+    const date = new Date(iso)
+    const now = new Date()
+    const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', timeZone: timezone }).format(date)
+    if (dayKey(date, timezone) === dayKey(now, timezone)) return tr.alertToday(time)
+    if (dayKey(date, timezone) === dayKey(new Date(now.getTime() + 864e5), timezone)) return tr.alertTomorrow(time)
     return new Intl.DateTimeFormat(locale, {
       weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: timezone,
-    }).format(new Date(iso))
+    }).format(date)
   } catch {
     return ''
   }
@@ -25,9 +33,12 @@ function pickText(alert, lang, tr) {
   const textLang = texts[lang] ? lang : texts.en ? 'en' : Object.keys(texts)[0]
   const src = texts[textLang] || { title: alert.type, description: '' }
   const typeName = tr.alertTypes?.[(alert.type || '').toLowerCase()]
-  const title = typeName ? tr.alertTitle(alert.level, typeName) : (src.title || '')
+  const known = tr.nwsEvents?.[(src.title || '').toLowerCase()]
+  const title = typeName ? tr.alertTitle(alert.level, typeName) : (known || src.title || '')
   return {
     title: title ? title.charAt(0).toUpperCase() + title.slice(1) : '',
+    // An agency title we couldn't translate stays in its own language
+    titleLang: typeName || known ? lang : (textLang || lang),
     description: src.description || '',
     textLang: textLang || lang,
   }
@@ -47,12 +58,12 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         {alerts.map((a, i) => {
           const c = LEVEL_COLORS[a.level] || LEVEL_COLORS.yellow
-          const { title } = pickText(a, lang, tr)
+          const { title, titleLang } = pickText(a, lang, tr)
           const isOpen = open === i
           const active = new Date(a.onset).getTime() <= now
           const when = active
-            ? tr.alertUntil(formatWhen(a.expires, timezone, locale))
-            : tr.alertFrom(formatWhen(a.onset, timezone, locale))
+            ? tr.alertUntil(formatWhen(a.expires, timezone, locale, tr))
+            : tr.alertFrom(formatWhen(a.onset, timezone, locale, tr))
           return (
             <button
               key={i}
@@ -73,7 +84,7 @@ export default function WeatherAlerts({ alerts, timezone, tr, size = 'md' }) {
             >
               <span style={{ fontSize: small ? 12 : 13, color: c.fg, flexShrink: 0 }} aria-hidden>⚠</span>
               <span>
-                <span style={{ fontWeight: 600 }}>{title}</span>{' '}
+                <span lang={titleLang !== lang ? titleLang : undefined} style={{ fontWeight: 600 }}>{title}</span>{' '}
                 <span style={{ color: 'rgba(255,255,255,0.75)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>· {when}</span>
               </span>
             </button>

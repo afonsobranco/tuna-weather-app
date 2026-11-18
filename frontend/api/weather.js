@@ -473,10 +473,16 @@ export default async function handler(req, res) {
     const hTimes = weatherData.hourly?.time || []
     const hPrecip = weatherData.hourly?.precipitation_probability || []
     const nowHour = localNow.slice(0, 13)
+    // Each strip entry covers two hours: its rain chance is the higher of the two
+    const blockPrecip = (idx) => {
+      const vals = [hPrecip[idx], hPrecip[idx + 1]].filter(Number.isFinite)
+      return vals.length ? Math.round(Math.max(...vals)) : null
+    }
     const hourEntry = (idx) => ({
       time: hTimes[idx],
       tempC: Math.round(hTemps[idx] * 10) / 10,
       icon: iconForForecast(hCodes[idx] ?? 0, isNightAt(hTimes[idx])),
+      p: blockPrecip(idx),
     })
 
     // 5-day forecast (daytime icons) with each day's 2-hourly strip

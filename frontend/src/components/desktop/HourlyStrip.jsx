@@ -3,6 +3,7 @@ import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { T } from '../../utils/unitUtils'
 import { translateDay } from '../../utils/i18nUtils'
+import BlockPrecip from '../hourly/BlockPrecip'
 
 function formatHour(timeStr) {
   if (!timeStr) return '—'
@@ -115,6 +116,7 @@ export default function HourlyStrip({ hourly: hourlyProp, dayLabel, unit, tr }) 
             background: h.isNow ? 'rgba(255,255,255,0.10)' : 'transparent',
           }}>
             <ForecastIcon kind={h.icon} size={20} />
+            <BlockPrecip p={h.p} tr={tr} size={10} />
             <div style={{
               fontFamily: '"Geist", system-ui, sans-serif',
               color: h.isNow ? '#fff' : 'rgba(255,255,255,0.8)',

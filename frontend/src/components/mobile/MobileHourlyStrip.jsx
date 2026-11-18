@@ -2,6 +2,7 @@ import Glass from '../primitives/Glass'
 import { ForecastIcon } from '../icons/WeatherIcons'
 import { T } from '../../utils/unitUtils'
 import { translateDay } from '../../utils/i18nUtils'
+import BlockPrecip from '../hourly/BlockPrecip'
 
 function formatHour(timeStr) {
   if (!timeStr) return '—'
@@ -78,6 +79,9 @@ export default function MobileHourlyStrip({ hourly = [], dayLabel, unit, tr }) {
             }}>
               {T(h.tempC, unit)}°
             </div>
+
+            {/* Chance of rain in this 2-hour block */}
+            <BlockPrecip p={h.p} tr={tr} />
           </Glass>
         ))}
       </div>

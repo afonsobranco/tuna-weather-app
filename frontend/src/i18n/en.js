@@ -42,6 +42,7 @@ export default {
   citySaved: (c) => `${c} saved`,
   removeCity: (c) => `Remove ${c}`,
   savedFull: (added, removed) => `${added} saved. ${removed} was removed to make room (8 cities max).`,
+  precipChance: "chance of precipitation",
   undo: "Undo",
   dismiss: "Dismiss",
   dayForecast: (day, p, hi, lo) => `${day}: high ${hi}°, low ${lo}°, ${p}% chance of precipitation`,
